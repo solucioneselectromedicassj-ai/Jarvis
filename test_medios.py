@@ -1,5 +1,8 @@
+import asyncio
+import base64
 import io
 import os
+import ssl
 import time
 import wave
 
@@ -80,3 +83,47 @@ class Medios(HttpMedios, Base):
     def test_wav_bien_formado(self):
         with wave.open(io.BytesIO(medios.wav(pcm(0.5)))) as w:
             self.assertEqual(w.getnframes(), 8000)
+
+
+class OrigenesYCors(HttpMedios, Base):
+    async def req(self, metodo, origen=None, host="127.0.0.1", usuario="p-celu"):
+        ctx = ssl.create_default_context(cafile=self.dir / "ca.crt")
+        r, w = await asyncio.open_connection("127.0.0.1", self.http_port, ssl=ctx)
+        auth = "Basic " + base64.b64encode(f"{usuario}:{self.claves[usuario]}".encode()).decode()
+        cab = f"{metodo} /media/audio HTTP/1.1\r\nHost: {host}\r\nAuthorization: {auth}\r\nContent-Type: audio/L16;rate=16000\r\n"
+        if origen:
+            cab += f"Origin: {origen}\r\n"
+        cuerpo = pcm() if metodo == "POST" else b""
+        w.write((cab + f"Content-Length: {len(cuerpo)}\r\n\r\n").encode() + cuerpo)
+        await w.drain()
+        data = await asyncio.wait_for(r.read(-1), 5)
+        w.close()
+        cab_r = data.partition(b"\r\n\r\n")[0].decode()
+        return int(cab_r.split(" ")[1]), cab_r
+
+    async def test_sin_lista_cualquiera_con_clave(self):
+        self.srv._origenes = None
+        estado, cab = await self.req("POST", origen="https://otro.example")
+        self.assertEqual(estado, 202)
+        self.assertNotIn("Access-Control-Allow-Origin", cab)
+
+    async def test_con_lista_solo_el_habilitado_y_el_mismo_origen(self):
+        self.srv._origenes = ["https://mi-casa.vercel.app"]
+        e, cab = await self.req("POST", origen="https://mi-casa.vercel.app")
+        self.assertEqual(e, 202)
+        self.assertIn("Access-Control-Allow-Origin: https://mi-casa.vercel.app", cab)
+        self.assertIn("Access-Control-Allow-Private-Network: true", cab)
+        self.assertEqual((await self.req("POST", origen="https://malo.example"))[0], 403)
+        e, cab = await self.req("POST", origen="https://malo.example")
+        self.assertNotIn("Access-Control-Allow-Origin", cab)
+        self.assertEqual((await self.req("POST", origen="https://127.0.0.1", host="127.0.0.1"))[0], 202)   # mismo origen
+        self.assertEqual((await self.req("POST"))[0], 202)                                                  # ESP32: sin Origin
+
+    async def test_preflight(self):
+        self.srv._origenes = ["https://mi-casa.vercel.app"]
+        e, cab = await self.req("OPTIONS", origen="https://mi-casa.vercel.app")
+        self.assertEqual(e, 204)
+        self.assertIn("Access-Control-Allow-Headers: authorization, content-type", cab)
+        self.assertEqual((await self.req("OPTIONS", origen="https://malo.example"))[0], 403)
+        self.srv._origenes = None
+        self.assertEqual((await self.req("OPTIONS", origen="https://mi-casa.vercel.app"))[0], 403)         # sin lista no se anuncia CORS

@@ -26,6 +26,8 @@ Política de la casa (igual para todos los canales):
 
 Decisiones de voz (Pablo, octubre 2026): Gemini gratis como primer proveedor de conversación (el texto sale a internet solo con `JARVIS_INTERNET_TEXTO=1`; nunca audio/foto/video; Gemini sin herramientas); micrófono ESP32 y botón 🎤 de la app desde el principio; una sola voz sintética lo más simple posible (la del teléfono), a mejorar después con voces más humanas.
 
+La app web también puede abrirse desde Vercel/GitHub Pages (decisión de Pablo): campo "Dirección de la casa" en el login + `--origen` en el servidor (apagado por defecto). Riesgo asumido y documentado en el README de la raíz: el código de la app viene de un tercero y maneja las credenciales; mitigar con 2FA en esas cuentas, un usuario por dispositivo y lista de orígenes explícita.
+
 ## 2. Reglas duras (no negociables sin preguntarle a Pablo)
 
 1. **Software propio.** Nada de programas empaquetados de terceros como columna del sistema (Mosquitto, Caddy, Home Assistant, Node-RED, etc.). Las **bibliotecas** sí valen (biblioteca estándar de Python, OpenCV, Vosk, etc.). Si dudás si algo cuenta como programa de terceros, preguntá.

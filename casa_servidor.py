@@ -126,7 +126,8 @@ def cmd_servir(a):
 
     async def main():
         wsp = a.ws_puerto if a.ws_puerto is not None else cfg.get("ws_puerto", PUERTO_WS)
-        port = await srv.iniciar(a.host, a.puerto or cfg.get("puerto", PUERTO), wsp or None, cfg.get("origenes"))
+        origenes = (cfg.get("origenes") or []) + (a.origen or []) or None   # None = sin lista (cualquiera con usuario y clave)
+        port = await srv.iniciar(a.host, a.puerto or cfg.get("puerto", PUERTO), wsp or None, origenes)
         print(f"casa-servidor escuchando en {a.host}:{port}" + (f" (WebSocket {srv.ws_port})" if wsp else ""), flush=True)
         await asyncio.Event().wait()
 
@@ -172,6 +173,7 @@ def main():
     s.add_argument("--puerto", type=int)
     s.add_argument("--ws-puerto", type=int, help="puerto WebSocket y de la app web (0 = apagado)")
     s.add_argument("--app", help="carpeta de la app web (por defecto ./app)")
+    s.add_argument("--origen", action="append", help="sitio web que puede conectarse desde afuera, p. ej. https://mi-casa.vercel.app (repetible). Con alguno, se rechazan los demás sitios")
     a = ap.parse_args()
     a.f(a)
 

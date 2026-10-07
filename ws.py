@@ -6,9 +6,20 @@ import asyncio
 import base64
 import hashlib
 import struct
+from urllib.parse import urlparse
 
 GUID = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 HEADERS_MAX = 16384
+
+
+def origen_permitido(origen: str | None, host: str | None, origenes: list[str] | None) -> bool:
+    """Sin Origin (no es un navegador) o mismo origen: siempre. Otro sitio web: solo si está en la lista (`origenes`).
+
+    Sin lista configurada se acepta cualquiera (igual hace falta usuario y clave); con lista, solo los nombrados.
+    """
+    if not origen or origenes is None:
+        return True
+    return origen in origenes or urlparse(origen).netloc == (host or "")
 
 
 class WSError(Exception):
@@ -133,7 +144,7 @@ async def aceptar(reader, writer, max_bytes: int, origenes: list[str] | None = N
             h[k.strip().lower()] = v.strip()
     if estaticos is not None and h.get("upgrade", "").lower() != "websocket":
         partes = lineas[0].split(" ")
-        if medios and partes[0] == "POST" and len(partes) > 1 and partes[1].startswith("/media/"):
+        if medios and partes[0] in ("POST", "OPTIONS") and len(partes) > 1 and partes[1].startswith("/media/"):
             await medios(partes[0], partes[1], h, reader, writer)
             return None
         await _servir(writer, partes[0], partes[1] if len(partes) > 1 else "/", estaticos)
@@ -148,7 +159,7 @@ async def aceptar(reader, writer, max_bytes: int, origenes: list[str] | None = N
     except (KeyError, ValueError):
         await _rechazar(writer, "400 Bad Request")
         return None
-    if origenes is not None and h.get("origin") and h["origin"] not in origenes:
+    if not origen_permitido(h.get("origin"), h.get("host"), origenes):
         await _rechazar(writer, "403 Forbidden")
         return None
     acepta = base64.b64encode(hashlib.sha1(h["sec-websocket-key"].encode() + GUID).digest()).decode()

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f766e">
 <meta name="color-scheme" content="light dark">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icono-192.png">
-<link rel="apple-touch-icon" href="/icono-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
 <title>Casa</title>
 <style>
 :root{--bg:#f4f7f6;--panel:#fff;--tx:#14201e;--tx2:#566663;--line:#d9e2df;--pri:#0f766e;--pri-tx:#fff;--ok:#15803d;--mal:#b91c1c;--aviso:#b45309;--r:14px}
@@ -71,9 +71,9 @@ label.chk{flex-direction:row;align-items:center;gap:8px}label.chk input{width:au
 </head>
 <body>
 <div id="raiz"></div>
-<script src="/vendor/react.production.min.js"></script>
-<script src="/vendor/react-dom.production.min.js"></script>
-<script src="/vendor/htm.js"></script>
+<script src="vendor/react.production.min.js"></script>
+<script src="vendor/react-dom.production.min.js"></script>
+<script src="vendor/htm.js"></script>
 <script>
 "use strict";
 const { useState, useEffect, useRef, useCallback, useReducer } = React;
@@ -86,6 +86,15 @@ const guardado = (k) => { try { return localStorage.getItem(k); } catch { return
 const guardar = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} };
 
 const SALUDO = { de: "jarvis", t: "Hola. Tocá 🎤 y hablame, o escribime. Órdenes de la casa: “abrí el riego 10 minutos”, “cómo está el tanque”. Para otros temas necesito el modelo de lenguaje (lo habilita Pablo en el servidor)." };
+/* A dónde conectarse: vacío = la misma dirección desde la que se abrió la app (el propio casa-servidor).
+   Si la app se abre desde otro sitio (p. ej. Vercel), se indica la dirección de la casa: 100.x.y.z:8884 o casa.xxx.ts.net:8884. */
+function destino(dir) {
+  const t = (dir || "").trim();
+  if (!t) return { ws: (location.protocol === "https:" ? "wss://" : "ws://") + location.host + location.pathname.replace(/[^/]*$/, "") + "ws", http: "media/audio", nombre: location.host };
+  const u = new URL(/^[a-z]+:\/\//i.test(t) ? t : "https://" + t);
+  return { ws: (u.protocol === "http:" ? "ws://" : "wss://") + u.host + "/ws", http: u.origin + "/media/audio", nombre: u.host };
+}
+
 const inicial = { conexion: "desconectado", error: null, modulos: {}, eventos: [], confirmaciones: [], ordenes: {}, yo: null, chat: [SALUDO], pend: {} };
 
 function reductor(s, a) {
@@ -145,13 +154,14 @@ function useCasa() {
     const r = ref.current;
     clearTimeout(r.timer);
     d({ t: "conexion", valor: "conectando" });
-    const ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
+    let dest; try { dest = destino(r.cred.dir); } catch { r.cerrado = true; return d({ t: "conexion", valor: "auth", error: "La dirección de la casa no es válida." }); }
+    const ws = new WebSocket(dest.ws);
     r.ws = ws;
     ws.onopen = () => enviar({ t: "hola", usuario: r.cred.usuario, clave: r.cred.clave });
     ws.onmessage = (ev) => {
       let m; try { m = JSON.parse(ev.data); } catch { return; }
       if (m.t === "ok") {
-        r.intento = 0;
+        r.intento = 0; r.visto = true;
         d({ t: "conexion", valor: "conectado" });
         enviar({ t: "sub", topics: ["casa/#"] });
         clearInterval(r.ping);
@@ -170,15 +180,15 @@ function useCasa() {
     ws.onclose = () => {
       clearInterval(r.ping);
       if (r.cerrado) return;
-      d({ t: "conexion", valor: "desconectado" });
       r.intento += 1;
+      d({ t: "conexion", valor: "desconectado", error: !r.visto && r.intento >= 3 ? `No llego a la casa (${dest.nombre}). ¿Está encendido el servidor? ¿El teléfono tiene Tailscale y confía en la CA de la casa? ¿Este sitio está permitido en el servidor (--origen)?` : undefined });
       r.timer = setTimeout(abrir, Math.min(30000, 1000 * 2 ** Math.min(r.intento, 5)));   // 2, 4, 8... hasta 30 s
     };
   }, [enviar]);
 
-  const entrar = useCallback((usuario, clave) => {
+  const entrar = useCallback((usuario, clave, dir) => {
     const r = ref.current;
-    r.cred = { usuario, clave }; r.cerrado = false; r.intento = 0;
+    r.cred = { usuario, clave, dir }; r.cerrado = false; r.intento = 0; r.visto = false;
     d({ t: "yo", valor: usuario.replace(/^[a-z]-/, "") });
     if (r.ws) { r.ws.onclose = null; r.ws.close(); }
     abrir();
@@ -238,7 +248,8 @@ function usarMicrofono(cred, dispatch) {
     if (n < 16000 * 0.4) return aviso("Fue muy corto, probá de nuevo.");
     const c = cred();
     try {
-      const r = await fetch("/media/audio", { method: "POST", body: pcm.buffer,
+      let url; try { url = destino(c.dir).http; } catch { return aviso("La dirección de la casa no es válida."); }
+      const r = await fetch(url, { method: "POST", body: pcm.buffer,
         headers: { Authorization: "Basic " + btoa(unescape(encodeURIComponent(c.usuario + ":" + c.clave))), "Content-Type": "audio/L16;rate=16000" } });
       const j = await r.json().catch(() => ({}));
       if (r.status === 202) dispatch({ t: "chat", items: [], pend: { [j.id]: { tipo: "audio" } } });
@@ -291,17 +302,21 @@ const sinAcentos = (t) => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "
 function Login({ onEntrar, error, conectando }) {
   const [usuario, setUsuario] = useState(guardado("casa.usuario") || "");
   const [clave, setClave] = useState("");
+  const [dir, setDir] = useState(guardado("casa.dir") || "");
   const [recordar, setRecordar] = useState(!!guardado("casa.clave"));
   const enviar = (e) => {
     e.preventDefault();
     guardar("casa.usuario", usuario || null);
     guardar("casa.clave", recordar ? clave : null);
-    onEntrar(usuario.trim(), clave);
+    guardar("casa.dir", dir.trim() || null);
+    onEntrar(usuario.trim(), clave, dir.trim());
   };
   return html`<form class="login" onSubmit=${enviar}>
     <h1>🏠 Casa</h1>
     <label>Usuario<input value=${usuario} onInput=${(e) => setUsuario(e.target.value)} autocomplete="username" autocapitalize="none" required placeholder="p-pablo-celu"/></label>
     <label>Clave<input type="password" value=${clave} onInput=${(e) => setClave(e.target.value)} autocomplete="current-password" required/></label>
+    <label>Dirección de la casa (opcional)<input value=${dir} onInput=${(e) => setDir(e.target.value)} autocapitalize="none" inputmode="url" placeholder="vacío = esta misma dirección"/></label>
+    <div class="nota">Si abriste la app desde otro sitio (por ejemplo Vercel), poné acá la dirección del servidor de la casa, como 100.64.0.1:8884.</div>
     <label class="chk"><input type="checkbox" checked=${recordar} onChange=${(e) => setRecordar(e.target.checked)}/> Recordar en este teléfono</label>
     ${recordar && html`<div class="nota">La clave queda guardada en este dispositivo. Si lo perdés, bloqueá el usuario desde el servidor.</div>`}
     ${error && html`<div class="banda error" role="alert">${error}</div>`}
@@ -426,7 +441,7 @@ function App() {
   const autoEntro = useRef(false);
   useEffect(() => {   // entrada automática si se eligió "recordar"
     if (autoEntro.current) return; autoEntro.current = true;
-    const u = guardado("casa.usuario"), c = guardado("casa.clave"); if (u && c) entrar(u, c);
+    const u = guardado("casa.usuario"), c = guardado("casa.clave"); if (u && c) entrar(u, c, guardado("casa.dir") || "");
   }, [entrar]);
   const dentro = s.conexion === "conectado" || (s.conexion === "conectando" && Object.keys(s.modulos).length) || s.conexion === "desconectado" && Object.keys(s.modulos).length;
   if (!dentro) return html`<${Login} onEntrar=${entrar} error=${s.error} conectando=${s.conexion === "conectando"}/>`;
@@ -444,7 +459,7 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("raiz")).render(html`<${App}/>`);
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
 </html>

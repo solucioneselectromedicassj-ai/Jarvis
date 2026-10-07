@@ -93,6 +93,8 @@ class WebSocket(Base):
         self.assertEqual(e.exception.response.status_code, 403)
         c = await websockets.connect(f"wss://127.0.0.1:{self.ws_port}", ssl=ctx, origin="https://casa.lan")
         await c.close()
+        c = await websockets.connect(f"wss://127.0.0.1:{self.ws_port}", ssl=ctx, origin=f"https://127.0.0.1:{self.ws_port}")   # mismo origen
+        await c.close()
 
 
 class _Cierre:

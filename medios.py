@@ -13,6 +13,8 @@ import struct
 import time
 from pathlib import Path
 
+from .ws import origen_permitido
+
 RATE = 16000
 MAX_SEG = 30
 MAX_BYTES = RATE * 2 * MAX_SEG
@@ -73,9 +75,13 @@ def purgar(raiz: Path, cuota_bytes: int, retencion_s: float) -> int:
     return usados
 
 
-async def responder(writer, estado: str, cuerpo: dict | None = None):
-    datos = json.dumps(cuerpo or {}).encode()
+async def responder(writer, estado: str, cuerpo: dict | None = None, cors: str | None = None):
+    datos = json.dumps(cuerpo or {}).encode() if cuerpo is not None else b""
     extra = "WWW-Authenticate: Basic realm=\"casa\"\r\n" if estado.startswith("401") else ""
+    if cors:                       # solo para un sitio web que Pablo habilitó en `origenes`
+        extra += (f"Access-Control-Allow-Origin: {cors}\r\nVary: Origin\r\nAccess-Control-Allow-Methods: POST\r\n"
+                  "Access-Control-Allow-Headers: authorization, content-type\r\nAccess-Control-Allow-Private-Network: true\r\n"
+                  "Access-Control-Max-Age: 600\r\n")
     writer.write((f"HTTP/1.1 {estado}\r\nContent-Type: application/json\r\nContent-Length: {len(datos)}\r\n{extra}"
                   "Cache-Control: no-store\r\nConnection: close\r\n\r\n").encode() + datos)
     try:
@@ -87,7 +93,13 @@ async def responder(writer, estado: str, cuerpo: dict | None = None):
 
 async def subir(servidor, metodo: str, ruta: str, h: dict, reader, writer):
     """Atiende POST /media/audio. `servidor` aporta: media_dir, cuota, retencion, autenticar(), publicar()."""
+    origen, lista = h.get("origin"), getattr(servidor, "_origenes", None)
+    cors = origen if origen and lista and origen in lista else None
     try:
+        if not origen_permitido(origen, h.get("host"), lista):
+            raise HTTPError("403 Forbidden", "origen no permitido")
+        if metodo == "OPTIONS":                       # preflight de un sitio web habilitado
+            return await responder(writer, "204 No Content" if cors else "403 Forbidden", None, cors)
         if ruta.split("?")[0] != "/media/audio" or metodo != "POST" or servidor.media_dir is None:
             raise HTTPError("404 Not Found")
         try:
@@ -121,8 +133,8 @@ async def subir(servidor, metodo: str, ruta: str, h: dict, reader, writer):
         (destino / f"{nombre}.wav").write_bytes(wav(pcm))
         segundos = round(len(pcm) / (RATE * 2), 2)
         servidor.publicar_audio(fuente, nombre, len(pcm), segundos)
-        await responder(writer, "202 Accepted", {"id": nombre, "segundos": segundos})
+        await responder(writer, "202 Accepted", {"id": nombre, "segundos": segundos}, cors)
     except HTTPError as e:
-        await responder(writer, e.estado, {"error": e.detalle or e.estado})
+        await responder(writer, e.estado, {"error": e.detalle or e.estado}, cors)
     except (asyncio.TimeoutError, asyncio.IncompleteReadError, ConnectionError):
         writer.close()

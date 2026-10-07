@@ -66,10 +66,12 @@ class ServirApp(unittest.IsolatedAsyncioTestCase):
         (d / ".git" / "config").write_text("x"); (d / "a.py").write_text("x"); (d / "index.html").write_text("<p>")
         self.assertEqual(sorted(cargar_app(d)), ["/", "/index.html"])
 
-    async def test_la_app_no_usa_cdn_externos(self):
+    async def test_la_app_no_carga_recursos_de_internet(self):
         html = (APP / "index.html").read_text(encoding="utf-8")
-        self.assertNotIn("http://", html.replace("http://www.w3.org", ""))
-        self.assertNotRegex(html, r"https://(?!127)")        # local primero: nada de recursos de internet
+        self.assertNotRegex(html, r"""(src|href)\s*=\s*["']?(https?:)?//""")     # ni scripts, ni estilos, ni fuentes externas
+        self.assertNotRegex(html, r"@import|url\(\s*[\"']?https?:")
+        for f in (APP / "sw.js", APP / "manifest.webmanifest"):
+            self.assertNotRegex(f.read_text(encoding="utf-8"), r"https?://")
 
 
 if __name__ == "__main__":

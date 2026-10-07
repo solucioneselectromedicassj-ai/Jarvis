@@ -1,7 +1,7 @@
 // Service worker: deja la app instalable y abrible aunque el servidor tarde. NO toca el WebSocket.
 const CACHE = "casa-v1";
-const BASE = ["/", "/manifest.webmanifest", "/icono-192.png", "/icono-512.png",
-  "/vendor/react.production.min.js", "/vendor/react-dom.production.min.js", "/vendor/htm.js"];
+const BASE = ["./", "manifest.webmanifest", "icono-192.png", "icono-512.png",   // relativas: la app puede estar en cualquier subcarpeta
+  "vendor/react.production.min.js", "vendor/react-dom.production.min.js", "vendor/htm.js"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(BASE)).then(() => self.skipWaiting()));
