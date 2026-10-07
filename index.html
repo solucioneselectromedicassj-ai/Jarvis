@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1419">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Casa</title>
+<style>
+:root{--bg:#0f1419;--card:#1a2129;--card2:#222b35;--line:#2d3844;--tx:#e8edf2;--mut:#8b9aa9;--ac:#3ea6ff;--on:#2fd47e;--warn:#ffb020;--bad:#ff5c5c;--r:16px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) 0 calc(86px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px}
+header{display:flex;align-items:center;gap:10px;padding:14px 0 6px}
+header h1{font-size:20px;margin:0;flex:1}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--mut)}
+.dot.ok{background:var(--on)}.dot.err{background:var(--bad)}.dot.wait{background:var(--warn)}
+.iconbtn{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;color:var(--mut)}
+.chip.sel{background:var(--ac);border-color:var(--ac);color:#04121f;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.card.on{border-color:var(--on)}
+.card.off-line{opacity:.5}
+.row{display:flex;align-items:center;gap:10px}
+.grow{flex:1;min-width:0}
+.name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{color:var(--mut);font-size:13px}
+.ico{font-size:24px}
+.tog{width:54px;height:30px;border-radius:999px;background:var(--card2);border:1px solid var(--line);position:relative;flex:none;padding:0}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--mut);transition:.15s}
+.tog.on{background:var(--on);border-color:var(--on)}
+.tog.on::after{left:27px;background:#fff}
+.btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.btn{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 4px}
+.btn:active{background:var(--ac);color:#04121f}
+.btn.pw{background:#3a2226;border-color:#5a2f35}
+.big{font-size:34px;font-weight:700}
+.bar{height:8px;border-radius:99px;background:var(--card2);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--on);transition:width .3s}
+.bar.hi>i{background:var(--warn)}.bar.over>i{background:var(--bad)}
+select,input[type=text],input[type=password],input[type=number]{width:100%;background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:inherit}
+label{display:block;color:var(--mut);font-size:13px;margin:10px 0 4px}
+.pill{display:inline-block;border-radius:99px;padding:2px 9px;font-size:12px;background:var(--card2);color:var(--mut)}
+.pill.w{background:#3b2f10;color:var(--warn)}
+.pill.g{background:#10351f;color:var(--on)}
+nav{position:fixed;left:0;right:0;bottom:0;background:#0b0f13ee;backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:8px 14px calc(8px + env(safe-area-inset-bottom));display:flex;gap:8px;z-index:5}
+nav .wrap{display:flex;gap:8px;width:100%;align-items:center}
+.tab{flex:1;background:none;border:0;padding:10px;border-radius:12px;color:var(--mut)}
+.tab.sel{background:var(--card);color:var(--tx)}
+.mic{width:56px;height:56px;border-radius:50%;border:0;background:var(--ac);color:#04121f;font-size:24px;margin-top:-26px;box-shadow:0 4px 14px #0008;flex:none}
+.mic.live{background:var(--bad);color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:#000d;border:1px solid var(--line);padding:10px 16px;border-radius:12px;z-index:9;max-width:90vw;text-align:center}
+.sheet{position:fixed;inset:0;background:#000a;z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{background:var(--bg);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:18px;max-height:90vh;overflow:auto}
+.alert{border-left:4px solid var(--warn);background:var(--card);padding:10px 12px;border-radius:10px;margin-bottom:8px}
+.alert.bad{border-left-color:var(--bad)}
+.empty{color:var(--mut);text-align:center;padding:40px 10px}
+.cmdbox{display:flex;gap:8px;margin:0 0 12px}
+.btn:disabled{opacity:.4}
+.sheet.top{z-index:30}
+.cam{display:block;width:100%;aspect-ratio:4/3;background:#000;border-radius:12px;object-fit:contain;margin-top:10px}
+.jv{display:flex;flex-direction:column;gap:4px;margin:0 0 12px;font-size:14px}
+.jv .you{color:var(--mut)}.jv .bot{color:var(--tx)}.jv .bot.bad{color:var(--warn)}
+.hold{touch-action:none;user-select:none;-webkit-user-select:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="jarvis/jarvis.js"></script>
+<script src="jarvis/oido.js"></script>
+
+<!-- ============ LÓGICA PURA (testeable sin navegador) ============ -->
+<script id="logic">
+window.CasaLogic = (function () {
+  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const stem = w => (w.length > 3 && w.endsWith('s')) ? w.slice(0, -1) : w;
+  const STOP = new Set('el la los las de del en al a un una y por mi me favor porfa que se'.split(' '));
+  const OFF_RE = /\b(apag\w*|desactiv\w*|cort\w*|cerr\w*|deten\w*)\b/g;
+  const ON_RE = /\b(prend\w*|encend\w*|activ\w*|abr\w*|llen\w*|sub\w*|rega|regar|regame|riega|riego)\b/g;
+  const ALIAS = {
+    luz: 'luz luces lampara lamparas', riego: 'riego regar planta plantas jardin canilla',
+    estufa: 'estufa calefactor', calefon: 'calefon agua caliente termotanque',
+    tv: 'tv tele televisor television', aire: 'aire acondicionado split',
+    porton: 'porton cochera garage garaje'
+  };
+
+  function listChannels(mods) {
+    const out = [];
+    Object.keys(mods).forEach(mid => {
+      const d = mods[mid] && mods[mid].desc;
+      if (!d || !Array.isArray(d.canales)) return;
+      d.canales.forEach(c => out.push({
+        key: mid + '/' + c.id, mod: mid, id: c.id, nombre: c.nombre || c.id,
+        habitacion: c.habitacion || d.habitacion || 'Casa', kind: c.tipo, icono: c.icono || '',
+        maxOn: c.maxOn || 0, defSeg: c.defSeg, botones: c.botones || [], genero: c.genero
+      }));
+    });
+    return out;
+  }
+
+  function durationSeconds(t) {
+    const m = t.match(/(\d+)\s*(h|hora|horas|min|minuto|minutos|seg|segundo|segundos)\b/);
+    if (!m) return 0;
+    const n = parseInt(m[1], 10), u = m[2];
+    return u[0] === 'h' ? n * 3600 : u === 'seg' || u.startsWith('segundo') ? n : n * 60;
+  }
+
+  function parseVoice(text, chs) {
+    const t = norm(text);
+    if (!t) return { type: 'error', msg: 'No escuché nada' };
+    if (/\bapag\w* (todo|todas|todos)\b/.test(t)) return { type: 'allOff' };
+    const isOff = (t.match(OFF_RE) || []).length > 0;
+    const isOn = !isOff && (t.match(ON_RE) || []).length > 0;
+    const seg = durationSeconds(t);
+    const words = t.replace(OFF_RE, ' ').replace(ON_RE, ' ').split(' ')
+      .filter(w => w && !STOP.has(w) && !/^\d+$/.test(w) && !/^(min|minuto|minutos|hora|horas|seg|segundo|segundos|h)$/.test(w))
+      .map(stem);
+    if (!words.length) return { type: 'error', msg: '¿Qué querés manejar?' };
+
+    // Coincidir con el nombre vale el doble que coincidir con la habitación o los sinónimos
+    const scored = chs.map(c => {
+      const nameBag = new Set(norm(c.nombre).split(' ').map(stem));
+      const otherBag = new Set(norm(c.habitacion + ' ' + (ALIAS[c.icono] || '')).split(' ').map(stem));
+      return { c, s: words.reduce((a, w) => a + (nameBag.has(w) ? 2 : otherBag.has(w) ? 1 : 0), 0) };
+    }).filter(x => x.s > 0);
+    if (!scored.length) return { type: 'error', msg: 'No encontré ese dispositivo' };
+    const top = Math.max.apply(null, scored.map(x => x.s));
+    let hit = scored.filter(x => x.s === top).map(x => x.c);
+    if (hit.length > 1 && !/\b(luces|todas|todos|todo)\b/.test(t))
+      return { type: 'error', msg: 'Hay varios: ' + hit.map(c => c.nombre).join(', ') + '. Decime cuál' };
+
+    const cmds = [];
+    for (const c of hit) {
+      if (c.kind === 'ir') {
+        // una frase de voz coincide si están todas sus palabras, aunque haya otras en el medio
+        const tw = new Set(t.split(' ').map(stem));
+        let b = c.botones.find(b => (b.voz || []).some(k => norm(k).split(' ').map(stem).every(w => tw.has(w))));
+        if (!b && (isOn || isOff)) b = c.botones.find(b => b.power);
+        if (!b) return { type: 'error', msg: '¿Qué hago con ' + c.nombre + '?' };
+        cmds.push({ key: c.key, mod: c.mod, ch: c.id, nombre: c.nombre, kind: 'ir', cmd: b.cmd, label: b.label });
+      } else if (c.kind === 'gate') {
+        if (!isOn && !isOff) return { type: 'error', msg: '¿Abrir o cerrar ' + c.nombre + '?' };
+        cmds.push({ key: c.key, mod: c.mod, ch: c.id, nombre: c.nombre, kind: 'gate', want: isOn ? 'abrir' : 'cerrar' });
+      } else if (c.kind === 'switch' || c.kind === 'valve' || c.kind === 'heater') {
+        if (!isOn && !isOff) return { type: 'error', msg: '¿Prender o apagar ' + c.nombre + '?' };
+        const k = { key: c.key, mod: c.mod, ch: c.id, nombre: c.nombre, kind: 'set', on: isOn };
+        if (isOn && seg) k.seg = seg;
+        else if (isOn && c.kind === 'valve') { const d = c.defSeg !== undefined ? c.defSeg : (c.maxOn ? Math.min(600, c.maxOn) : 0); if (d) k.seg = d; }
+        cmds.push(k);
+      }
+    }
+    if (!cmds.length) return { type: 'error', msg: 'Ese dispositivo no se maneja por voz' };
+    return { type: 'cmds', cmds };
+  }
+
+  // Qué NO se puede hacer nunca por voz (ni escribiendo): una grabación, el televisor o alguien
+  // desde la vereda podrían dar la orden. Se maneja solo desde su tarjeta en la app.
+  const VOICE_BLOCKED = ['gate', 'doorbell', 'lock'];
+  const voiceBlocked = kind => VOICE_BLOCKED.indexOf(kind) >= 0;
+
+  // Busca canales por las palabras de una frase (sirve para órdenes y consultas).
+  // extraStop = palabras que no identifican nada ("esta", "prendida", "cuanto"…).
+  function matchChannels(text, chs, extraStop) {
+    const ex = new Set(extraStop || []);
+    const words = norm(text).replace(OFF_RE, ' ').replace(ON_RE, ' ').split(' ')
+      .filter(w => w && !STOP.has(w) && !ex.has(w) && !/^\d+$/.test(w) &&
+        !/^(min|minuto|minutos|hora|horas|seg|segundo|segundos|h)$/.test(w)).map(stem);
+    if (!words.length) return [];
+    const scored = chs.map(c => {
+      const nameBag = new Set(norm(c.nombre).split(' ').map(stem));
+      const otherBag = new Set(norm(c.habitacion + ' ' + (ALIAS[c.icono] || '')).split(' ').map(stem));
+      return { c, s: words.reduce((a, w) => a + (nameBag.has(w) ? 2 : otherBag.has(w) ? 1 : 0), 0) };
+    }).filter(x => x.s > 0);
+    if (!scored.length) return [];
+    const top = Math.max.apply(null, scored.map(x => x.s));
+    return scored.filter(x => x.s === top).map(x => x.c);
+  }
+
+  function buildCmd(c) {
+    const topic = 'casa/' + c.mod + '/cmd';
+    if (c.kind === 'ir') return { topic, payload: JSON.stringify({ c: c.ch, ir: c.cmd }) };
+    if (c.kind === 'learn') return { topic, payload: JSON.stringify({ c: c.ch, aprender: c.cmd }) };
+    if (c.kind === 'pulse') return { topic, payload: JSON.stringify({ c: c.ch, pulso: true }) };
+    if (c.kind === 'send') return { topic, payload: JSON.stringify(Object.assign({ c: c.ch }, c.data || {})) };
+    const p = { c: c.ch, on: !!c.on };
+    if (c.on && c.seg) p.seg = c.seg;
+    return { topic, payload: JSON.stringify(p) };
+  }
+
+  // Aviso de consumo: dispara al cruzar el límite, se rearma al bajar del 90 %
+  function energyCheck(prev, w, limit) {
+    const st = { over: !!(prev && prev.over) };
+    if (!(limit > 0) || typeof w !== 'number' || isNaN(w)) return { alert: false, state: st };
+    if (w > limit && !st.over) { st.over = true; return { alert: true, state: st }; }
+    if (w < limit * 0.9) st.over = false;
+    return { alert: false, state: st };
+  }
+
+  function fmtResta(s) {
+    s = Math.max(0, Math.round(s));
+    const m = Math.floor(s / 60), r = s % 60;
+    return m + ':' + (r < 10 ? '0' : '') + r;
+  }
+  function ago(sec) {
+    if (sec < 60) return 'hace ' + Math.round(sec) + ' s';
+    if (sec < 3600) return 'hace ' + Math.round(sec / 60) + ' min';
+    return 'hace ' + Math.round(sec / 3600) + ' h';
+  }
+
+  // ---------- Portón ----------
+  // El portón se maneja con un pulso (como el botón del control): solo se manda si el estado lo justifica.
+  function gateDecision(estado, want) {
+    if (estado === 'moviendo') return { act: false, msg: 'El portón se está moviendo' };
+    if (estado !== 'abierto' && estado !== 'cerrado') return { act: false, msg: 'No sé en qué estado está el portón' };
+    if (want === 'abrir' && estado === 'abierto') return { act: false, msg: 'El portón ya está abierto' };
+    if (want === 'cerrar' && estado === 'cerrado') return { act: false, msg: 'El portón ya está cerrado' };
+    return { act: true, msg: '' };
+  }
+
+  // ---------- Geovalla (solo funciona con la app abierta) ----------
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000, rad = x => x * Math.PI / 180;
+    const dLat = rad(lat2 - lat1), dLon = rad(lon2 - lon1);
+    const a = Math.pow(Math.sin(dLat / 2), 2) + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.pow(Math.sin(dLon / 2), 2);
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+  }
+  // state: null | 'dentro' | 'fuera'. Entra al cruzar el radio; sale recién al 150 % (evita rebotes). La primera lectura no dispara nada.
+  function geoStep(state, pos, home, radius) {
+    if (!home || !(radius > 0) || !pos) return { state: state, ev: null, dist: null };
+    const dist = haversine(pos.lat, pos.lon, home.lat, home.lon);
+    if (pos.acc > radius) return { state: state, ev: null, dist: dist };      // lectura demasiado imprecisa para decidir
+    if (state == null) return { state: dist <= radius ? 'dentro' : 'fuera', ev: null, dist: dist };
+    if (state === 'fuera' && dist <= radius) return { state: 'dentro', ev: 'llegando', dist: dist };
+    if (state === 'dentro' && dist > radius * 1.5) return { state: 'fuera', ev: 'saliendo', dist: dist };
+    return { state: state, ev: null, dist: dist };
+  }
+
+  // ---------- Audio del portero: PCM 16 bit, mono, 8 kHz, little-endian ----------
+  function pcmFromFloat(f, inRate, outRate) {
+    const ratio = inRate / outRate, n = Math.floor(f.length / ratio), out = new Int16Array(n);
+    for (let i = 0; i < n; i++) {
+      const a = Math.floor(i * ratio), b = Math.max(a + 1, Math.floor((i + 1) * ratio));
+      let sum = 0; for (let j = a; j < b; j++) sum += f[j];
+      out[i] = Math.round(Math.max(-1, Math.min(1, sum / (b - a))) * 32767);
+    }
+    return out;
+  }
+  function pcmToBytes(i16) {
+    const out = new Uint8Array(i16.length * 2);
+    for (let i = 0; i < i16.length; i++) { const v = i16[i] & 0xffff; out[2 * i] = v & 255; out[2 * i + 1] = v >> 8; }
+    return out;
+  }
+  function floatFromPcm(bytes) {
+    const n = bytes.length >> 1, out = new Float32Array(n);
+    for (let i = 0; i < n; i++) { let v = bytes[2 * i] | (bytes[2 * i + 1] << 8); if (v & 0x8000) v -= 0x10000; out[i] = v / 32768; }
+    return out;
+  }
+  // Base64 propio: el navegador no puede publicar bytes crudos por MQTT (mqtt.js exige Buffer), así que el audio
+  // hacia la puerta viaja en base64; los bytes que llegan (fotos, video, audio de la puerta) sí se leen directo.
+  function bytesToB64(u8) {
+    const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    let out = '';
+    for (let i = 0; i < u8.length; i += 3) {
+      const has1 = i + 1 < u8.length, has2 = i + 2 < u8.length;
+      const n = (u8[i] << 16) | ((has1 ? u8[i + 1] : 0) << 8) | (has2 ? u8[i + 2] : 0);
+      out += A[(n >> 18) & 63] + A[(n >> 12) & 63] + (has1 ? A[(n >> 6) & 63] : '=') + (has2 ? A[n & 63] : '=');
+    }
+    return out;
+  }
+  function imageMime(b) { return b.length > 4 && b[0] === 0x3c && b[1] === 0x73 && b[2] === 0x76 && b[3] === 0x67 ? 'image/svg+xml' : 'image/jpeg'; }
+
+  // ---------- Bus simulado: mismo contrato que el broker real (modo demo y tests) ----------
+  function createSimBus(rand) {
+    rand = rand || Math.random;
+    const handlers = [], connHandlers = [];
+    let now = 0, subscribed = false, ended = false;
+    const irTv = [
+      { cmd: 'tv_power', label: '⏻', power: true, voz: [] },
+      { cmd: 'tv_vol_up', label: 'Vol +', voz: ['subir volumen', 'volumen mas'] },
+      { cmd: 'tv_vol_down', label: 'Vol −', voz: ['bajar volumen', 'volumen menos'] },
+      { cmd: 'tv_mute', label: 'Mute', voz: ['silencio', 'mute'] },
+      { cmd: 'tv_ch_up', label: 'CH +', voz: [] }, { cmd: 'tv_ch_down', label: 'CH −', voz: [] }];
+    const irAc = [
+      { cmd: 'ac_power', label: '⏻', power: true, voz: [] },
+      { cmd: 'ac_temp_up', label: 'Temp +', voz: ['subir temperatura'] },
+      { cmd: 'ac_temp_down', label: 'Temp −', voz: ['bajar temperatura'] },
+      { cmd: 'ac_modo', label: 'Modo', voz: [] }];
+    const mods = {
+      sala: { desc: { id: 'sala', nombre: 'Módulo Sala', canales: [
+        { id: 'c1', tipo: 'switch', icono: 'luz', nombre: 'Luz living', habitacion: 'Living' },
+        { id: 'c2', tipo: 'switch', icono: 'luz', nombre: 'Luz cocina', habitacion: 'Cocina' },
+        { id: 'c3', tipo: 'heater', icono: 'estufa', nombre: 'Estufa living', habitacion: 'Living', maxOn: 7200 },
+        { id: 'mov1', tipo: 'motion', nombre: 'Movimiento living', habitacion: 'Living' }] } },
+      riego: { desc: { id: 'riego', nombre: 'Módulo Riego', canales: [
+        { id: 'c1', tipo: 'valve', icono: 'riego', nombre: 'Riego jardín', habitacion: 'Jardín', maxOn: 1800 },
+        { id: 'c2', tipo: 'valve', icono: 'riego', nombre: 'Riego macetas', habitacion: 'Jardín', maxOn: 900 }] } },
+      bano: { desc: { id: 'bano', nombre: 'Módulo Baño', canales: [
+        { id: 'c1', tipo: 'heater', icono: 'calefon', nombre: 'Calefón', habitacion: 'Baño', maxOn: 3600 }] } },
+      tablero: { desc: { id: 'tablero', nombre: 'Tablero', canales: [
+        { id: 'en1', tipo: 'energy', nombre: 'Consumo general', habitacion: 'Tablero' }] } },
+      porton: { desc: { id: 'porton', nombre: 'Portón', canales: [
+        { id: 'p1', tipo: 'gate', icono: 'porton', nombre: 'Portón', habitacion: 'Entrada' }] } },
+      portero: { desc: { id: 'portero', nombre: 'Portero', canales: [
+        { id: 'cam', tipo: 'doorbell', nombre: 'Portero', habitacion: 'Entrada' }] } },
+      bomba: { desc: { id: 'bomba', nombre: 'Bomba y riego', canales: [
+        { id: 'z_tanque', tipo: 'valve', icono: 'riego', nombre: 'Subir agua al tanque', habitacion: 'Riego', maxOn: 2700, defSeg: 0 },
+        { id: 'z_plantas', tipo: 'valve', icono: 'riego', nombre: 'Riego de plantas', habitacion: 'Riego', maxOn: 3600, defSeg: 600 },
+        { id: 'z_pasto', tipo: 'valve', icono: 'riego', nombre: 'Riego del pasto', habitacion: 'Riego', maxOn: 3600, defSeg: 900 },
+        { id: 'z_manguera', tipo: 'valve', icono: 'riego', nombre: 'Manguera', habitacion: 'Riego', defSeg: 0 },
+        { id: 'bomba', tipo: 'pump', nombre: 'Bomba', habitacion: 'Riego' }] } },
+      'ir-living': { desc: { id: 'ir-living', nombre: 'IR Living', canales: [
+        { id: 'ir1', tipo: 'ir', icono: 'tv', nombre: 'TV living', habitacion: 'Living', botones: irTv },
+        { id: 'ir2', tipo: 'ir', icono: 'aire', nombre: 'Aire living', habitacion: 'Living', botones: irAc }] } }
+    };
+    const LOAD = { 'sala/c1': 40, 'sala/c2': 40, 'sala/c3': 1500, 'bano/c1': 2200 };
+    Object.keys(mods).forEach(id => {
+      const m = mods[id]; m.st = {};
+      m.desc.canales.forEach(c => {
+        if (c.tipo === 'motion') m.st[c.id] = { activo: false, ultimo: 0 };
+        else if (c.tipo === 'energy') m.st[c.id] = { w: 0, v: 220, a: 0, kwh: 0 };
+        else if (c.tipo === 'gate') m.st[c.id] = { estado: 'cerrado', seg: 0 };
+        else if (c.tipo === 'doorbell') m.st[c.id] = { viendo: false };
+        else if (c.tipo === 'pump') m.st[c.id] = {};
+        else if (c.tipo !== 'ir') m.st[c.id] = { on: false, resta: null, dl: 0 };
+      });
+    });
+    const gate = { dest: null, until: 0, openAt: 0, warned: false }, cam = { until: 0 };
+    const asc = str => { const u = new Uint8Array(str.length); for (let i = 0; i < str.length; i++) u[i] = str.charCodeAt(i) & 255; return u; };
+    const frame = () => {
+      const sec = Math.floor(now), t = ('0' + Math.floor(sec / 60) % 60).slice(-2) + ':' + ('0' + sec % 60).slice(-2);
+      return asc('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240"><rect width="320" height="240" fill="#1b2430"/><circle cx="160" cy="95" r="38" fill="#2f3b4a"/><rect x="100" y="140" width="120" height="80" rx="40" fill="#2f3b4a"/><text x="160" y="232" fill="#8b9aa9" font-size="14" text-anchor="middle" font-family="sans-serif">DEMO ' + t + '</text></svg>');
+    };
+    const emitBin = (topic, u8) => { if (ended) return; handlers.forEach(h => h(topic, u8)); };
+    const emit = (topic, obj) => { if (ended) return; const p = typeof obj === 'string' ? obj : JSON.stringify(obj); handlers.forEach(h => h(topic, p)); };
+    // Bomba simulada: un solo destino a la vez; la manguera tiene prioridad y el resto espera en cola
+    let ordC = 0;
+    const simActive = () => {
+      const st = mods.bomba.st, zs = ['z_tanque', 'z_plantas', 'z_pasto', 'z_manguera'].filter(k => st[k].on);
+      if (!zs.length) return null;
+      if (st.z_manguera.on) return 'z_manguera';
+      return zs.sort((a, b) => (st[a].ord || 0) - (st[b].ord || 0))[0];
+    };
+    const pubState = id => {
+      const out = {};
+      if (id === 'bomba') {
+        const act = simActive(), st = mods.bomba.st;
+        ['z_tanque', 'z_plantas', 'z_pasto', 'z_manguera'].forEach(k => {
+          const s = st[k];
+          out[k] = { on: s.on, resta: s.on && s.dl ? Math.max(0, Math.round(s.dl - now)) : null, marcha: s.on && k === act };
+        });
+        out.bomba = { fase: act ? 'bombeando' : 'reposo', destino: act ? act.slice(2) : null, cisterna: true, tanque: 'ok', manguera: !!st.z_manguera.on, auto_bloq: false };
+        emit('casa/bomba/estado', out); return;
+      }
+      Object.keys(mods[id].st).forEach(k => {
+        const s = mods[id].st[k];
+        out[k] = ('dl' in s) ? { on: s.on, resta: s.on && s.dl ? Math.max(0, Math.round(s.dl - now)) : null } : s;
+      });
+      emit('casa/' + id + '/estado', out);
+    };
+    const power = () => { let w = 180 + Math.round(rand() * 40); Object.keys(LOAD).forEach(k => { const [m, c] = k.split('/'); if (mods[m].st[c].on) w += LOAD[k]; }); return w; };
+    const pubEnergy = () => { const s = mods.tablero.st.en1; s.w = power(); s.a = Math.round(s.w / s.v * 10) / 10; pubState('tablero'); };
+
+    const bus = {
+      sim: true,
+      on(ev, fn) { if (ev === 'message') handlers.push(fn); if (ev === 'connect') { connHandlers.push(fn); setTimeout(fn, 0); } return bus; },
+      subscribe() {
+        if (subscribed) return; subscribed = true;
+        setTimeout(() => Object.keys(mods).forEach(id => {
+          emit('casa/' + id + '/desc', mods[id].desc); emit('casa/' + id + '/online', '1'); pubState(id);
+        }), 0);
+      },
+      publish(topic, payload) {
+        const m = topic.match(/^casa\/([^/]+)\/cmd$/); if (!m || !mods[m[1]]) return;
+        let cmd; try { cmd = JSON.parse(String(payload)); } catch (e) { return; }
+        const mod = mods[m[1]], d = mod.desc.canales.find(c => c.id === cmd.c); if (!d) return;
+        if ('on' in cmd && mod.st[cmd.c] && 'dl' in mod.st[cmd.c]) {
+          const s = mod.st[cmd.c];
+          const was = s.on; s.on = !!cmd.on;
+          if (s.on && !was) s.ord = ++ordC;
+          if (s.on) {
+            let seg = cmd.seg > 0 ? cmd.seg : 0;
+            s.cap = false;
+            if (d.maxOn && (!seg || seg > d.maxOn)) { seg = d.maxOn; s.cap = true; }
+            s.dl = seg ? now + seg : 0;
+          } else { s.dl = 0; s.cap = false; }
+          pubState(mod.desc.id); if (mod.desc.id !== 'tablero') pubEnergy();
+        } else if (cmd.ir) emit('casa/' + mod.desc.id + '/evento', { tipo: 'ir_enviado', c: cmd.c, cmd: cmd.ir });
+        else if (cmd.aprender) emit('casa/' + mod.desc.id + '/evento', { tipo: 'ir_aprendido', c: cmd.c, nombre: cmd.aprender, ok: true });
+        else if (cmd.pulso && d.tipo === 'gate') {
+          const g = mod.st[cmd.c];
+          if (g.estado !== 'moviendo') { gate.dest = g.estado === 'cerrado' ? 'abierto' : 'cerrado'; g.estado = 'moviendo'; gate.until = now + 6; pubState(mod.desc.id); }
+        } else if (d.tipo === 'doorbell') {
+          const s = mod.st[cmd.c], id = mod.desc.id;
+          if (cmd.ver !== undefined) {
+            const n = Math.max(0, Math.min(60, +cmd.ver || 0));
+            s.viendo = n > 0; cam.until = now + n; pubState(id);
+            if (n > 0) emitBin('casa/' + id + '/video', frame());
+          } else if (cmd.foto) emitBin('casa/' + id + '/foto', frame());
+          else if (cmd.abrir) emit('casa/' + id + '/evento', { tipo: 'puerta_abierta', c: cmd.c, nombre: d.nombre });
+        }
+      },
+      tick(dt) {
+        now += dt;
+        Object.keys(mods).forEach(id => {
+          const m = mods[id]; let changed = false;
+          Object.keys(m.st).forEach(k => {
+            const s = m.st[k], d = m.desc.canales.find(c => c.id === k);
+            if ('dl' in s && s.on && s.dl) {
+              changed = true;
+              if (id === 'bomba' && k !== simActive()) { s.dl += dt; }
+              else if (now >= s.dl) { const cap = s.cap; s.on = false; s.dl = 0; s.cap = false; emit('casa/' + id + '/evento', { tipo: cap ? 'auto_apagado' : 'temporizador_fin', c: k, nombre: d.nombre }); }
+            }
+            if (d.tipo === 'gate') {
+              if (s.estado === 'moviendo' && now >= gate.until) {
+                s.estado = gate.dest; changed = true;
+                if (s.estado === 'abierto') { gate.openAt = now; gate.warned = false; }
+              }
+              if (s.estado === 'abierto') {
+                const sg = Math.round(now - gate.openAt), rep10 = Math.floor(sg / 10) * 10;
+                if (rep10 !== s.seg) { s.seg = rep10; changed = true; }
+                if (sg >= 300 && !gate.warned) { gate.warned = true; emit('casa/' + id + '/evento', { tipo: 'porton_abierto_mucho', c: k, nombre: d.nombre, seg: sg }); }
+              } else if (s.seg) { s.seg = 0; changed = true; }
+            }
+            if (d.tipo === 'doorbell') {
+              if (s.viendo) { if (now >= cam.until) { s.viendo = false; changed = true; } else emitBin('casa/' + id + '/video', frame()); }
+              if (rand() < 0.003) { emit('casa/' + id + '/evento', { tipo: 'timbre', c: k, nombre: d.nombre }); emitBin('casa/' + id + '/foto', frame()); }
+            }
+            if (d.tipo === 'motion') {
+              if (s.activo && now - s.ultimo > 8) { s.activo = false; changed = true; }
+              else if (!s.activo && rand() < 0.02) { s.activo = true; s.ultimo = now; changed = true; emit('casa/' + id + '/evento', { tipo: 'movimiento', c: k, nombre: d.nombre }); }
+            }
+          });
+          if (changed) pubState(id);
+        });
+        pubEnergy();
+      },
+      end() { ended = true; }
+    };
+    return bus;
+  }
+
+  return { norm, listChannels, parseVoice, matchChannels, voiceBlocked, buildCmd, energyCheck, fmtResta, ago, createSimBus,
+    gateDecision, haversine, geoStep, pcmFromFloat, pcmToBytes, floatFromPcm, bytesToB64, imageMime };
+})();
+</script>
+
+<!-- ============ APP ============ -->
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useMemo, useCallback, useReducer } = React;
+const L = window.CasaLogic;
+const ICON = { luz: '💡', riego: '🚿', estufa: '🔥', calefon: '🚿', tv: '📺', aire: '❄️', porton: '🚪' };
+const KIND_ICON = { motion: '🏃', energy: '⚡', temp: '🌡️', ir: '🎛️', valve: '🌱', heater: '🔥', switch: '💡', gate: '🚪', doorbell: '🔔', pump: '💧' };
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+function reducer(s, a) {
+  const cur = s[a.id] || { desc: null, online: null, st: {}, rt: 0 };
+  switch (a.t) {
+    case 'desc': return { ...s, [a.id]: { ...cur, desc: a.desc } };
+    case 'estado': return { ...s, [a.id]: { ...cur, st: a.st, rt: Date.now() } };
+    case 'online': return { ...s, [a.id]: { ...cur, online: a.v } };
+    case 'reset': return {};
+    default: return s;
+  }
+}
+
+function Toggle({ on, onClick, disabled }) {
+  return <button className={'tog' + (on ? ' on' : '')} onClick={onClick} disabled={disabled} aria-pressed={on} aria-label="interruptor" />;
+}
+
+function SwitchCard({ ch, mod, now, send }) {
+  const s = mod.st[ch.id] || {};
+  const on = !!s.on;
+  const noCap = ch.kind === 'valve' && (!ch.maxOn || ch.defSeg === 0);   // p. ej. manguera y tanque: sin tiempo por defecto
+  const [dur, setDur] = useState(ch.defSeg !== undefined ? ch.defSeg : (ch.kind === 'valve' ? 600 : 0));
+  const resta = on && s.resta != null ? s.resta - (now - mod.rt) / 1000 : null;
+  const icon = ICON[ch.icono] || KIND_ICON[ch.kind];
+  const toggle = () => send({ key: ch.key, mod: ch.mod, ch: ch.id, kind: 'set', on: !on, seg: !on && dur ? dur : 0 });
+  return (
+    <div className={'card' + (on ? ' on' : '') + (mod.online === false ? ' off-line' : '')}>
+      <div className="row">
+        <span className="ico">{icon}</span>
+        <div className="grow"><div className="name">{ch.nombre}</div><div className="sub">{ch.habitacion}{mod.online === false ? ' · sin conexión' : ''}</div></div>
+        <Toggle on={on} onClick={toggle} disabled={mod.online === false} />
+      </div>
+      {ch.kind === 'valve' && !on && (
+        <select value={dur} onChange={e => setDur(+e.target.value)} aria-label="duración del riego">
+          {noCap && <option value={0}>{ch.id === 'z_tanque' ? 'Hasta que se llene' : 'Sin tiempo (hasta que la apague)'}</option>}
+          {[300, 600, 1200, 1800].filter(d => !ch.maxOn || d <= ch.maxOn).map(d => <option key={d} value={d}>Regar {d / 60} min</option>)}
+        </select>
+      )}
+      {on && s.marcha === false && <span className="pill w">en espera (la bomba atiende otro destino)</span>}
+      {on && s.marcha === true && noCap && <span className="pill g">manguera abierta, sin tiempo</span>}
+      {on && resta != null && s.marcha !== false && <span className="pill g">se apaga en {L.fmtResta(resta)}</span>}
+      {ch.kind === 'heater' && !on && ch.maxOn > 0 && <span className="pill w">tope de seguridad {Math.round(ch.maxOn / 60)} min</span>}
+    </div>
+  );
+}
+
+function PumpCard({ ch, mod }) {
+  const s = mod.st[ch.id] || {};
+  const DEST = { tanque: 'subiendo agua al tanque', plantas: 'regando las plantas', pasto: 'regando el pasto', manguera: 'manguera' };
+  const fase = s.fase || '?';
+  const txt = fase === 'bombeando' ? 'En marcha: ' + (DEST[s.destino] || '') : fase === 'abriendo' ? 'Abriendo la válvula…' : fase === 'parando' ? 'Parando…' : fase === 'reposo' ? 'En reposo' : 'Sin dato';
+  return (
+    <div className={'card' + (fase === 'bombeando' ? ' on' : '') + (mod.online === false ? ' off-line' : '')}>
+      <div className="row">
+        <span className="ico">💧</span>
+        <div className="grow"><div className="name">{ch.nombre}</div><div className="sub">{txt}{mod.online === false ? ' · sin conexión' : ''}</div></div>
+        <span className={'pill ' + (s.manguera ? 'w' : 'g')}>{s.manguera ? 'Modo manguera' : 'Automático'}</span>
+      </div>
+      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+        <span className={'pill ' + (s.cisterna === false ? 'w' : 'g')}>{s.cisterna === false ? 'Cisterna sin agua' : 'Cisterna con agua'}</span>
+        <span className={'pill ' + (s.tanque === 'bajo' ? 'w' : 'g')}>{s.tanque === 'bajo' ? 'Tanque bajo' : 'Tanque ok'}</span>
+        {s.auto_bloq && <span className="pill w">llenado automático en pausa</span>}
+      </div>
+    </div>
+  );
+}
+
+function IrCard({ ch, mod, send, toast }) {
+  const [learn, setLearn] = useState(false);
+  const press = b => {
+    send({ key: ch.key, mod: ch.mod, ch: ch.id, kind: learn ? 'learn' : 'ir', cmd: b.cmd }, true);
+    toast(learn ? 'Apuntá el control al módulo y apretá «' + b.label + '»' : b.label);
+  };
+  return (
+    <div className={'card' + (mod.online === false ? ' off-line' : '')}>
+      <div className="row">
+        <span className="ico">{ICON[ch.icono] || '🎛️'}</span>
+        <div className="grow"><div className="name">{ch.nombre}</div><div className="sub">{ch.habitacion}{learn ? ' · modo aprender' : ''}</div></div>
+        <button className={'iconbtn' + (learn ? ' sel' : '')} style={learn ? { background: 'var(--warn)', color: '#000' } : null} onClick={() => setLearn(!learn)} title="Aprender botones del control">🎓</button>
+      </div>
+      <div className="btns">{ch.botones.map(b => <button key={b.cmd} className={'btn' + (b.power ? ' pw' : '')} onClick={() => press(b)}>{b.label}</button>)}</div>
+    </div>
+  );
+}
+
+function MotionCard({ ch, mod }) {
+  const s = mod.st[ch.id] || {};
+  return (
+    <div className={'card' + (s.activo ? ' on' : '')}>
+      <div className="row">
+        <span className="ico">🏃</span>
+        <div className="grow"><div className="name">{ch.nombre}</div><div className="sub">{ch.habitacion}</div></div>
+        <span className={'pill ' + (s.activo ? 'g' : '')}>{s.activo ? 'movimiento' : 'quieto'}</span>
+      </div>
+    </div>
+  );
+}
+
+function EnergyCard({ ch, mod, limit }) {
+  const s = mod.st[ch.id] || {};
+  const w = s.w || 0;
+  const pct = limit > 0 ? Math.min(100, w / limit * 100) : 0;
+  return (
+    <div className="card" style={{ gridColumn: 'span 1' }}>
+      <div className="row"><span className="ico">⚡</span><div className="grow"><div className="name">{ch.nombre}</div><div className="sub">límite de aviso {limit} W</div></div></div>
+      <div className="big">{Math.round(w)} <span className="sub">W</span></div>
+      <div className={'bar' + (pct > 100 ? ' over' : pct > 80 ? ' hi' : '')}><i style={{ width: pct + '%' }} /></div>
+      <div className="sub">{s.v != null ? Math.round(s.v) + ' V · ' : ''}{s.a != null ? s.a + ' A' : ''}{s.kwh ? ' · ' + s.kwh + ' kWh' : ''}</div>
+    </div>
+  );
+}
+
+function GateCard({ ch, mod, ask, send }) {
+  const s = mod.st[ch.id] || {};
+  const est = s.estado || '?';
+  const label = est === 'cerrado' ? 'Cerrado' : est === 'abierto' ? 'Abierto' : est === 'moviendo' ? 'Moviéndose…' : 'Sin dato';
+  const act = est === 'abierto' ? 'cerrar' : 'abrir';
+  const dec = L.gateDecision(est, act);
+  const go = () => ask({ text: act === 'abrir' ? '¿Abrir el portón?' : '¿Cerrar el portón?', label: act === 'abrir' ? 'Abrir' : 'Cerrar',
+    yes: () => send({ mod: ch.mod, ch: ch.id, kind: 'pulse' }) });
+  return (
+    <div className={'card' + (est === 'abierto' ? ' on' : '') + (mod.online === false ? ' off-line' : '')}>
+      <div className="row">
+        <span className="ico">🚪</span>
+        <div className="grow"><div className="name">{ch.nombre}</div><div className="sub">{ch.habitacion}{mod.online === false ? ' · sin conexión' : ''}</div></div>
+        <span className={'pill ' + (est === 'abierto' ? 'w' : est === 'cerrado' ? 'g' : '')}>{label}</span>
+      </div>
+      {est === 'abierto' && s.seg > 0 && <div className="sub">abierto hace {L.fmtResta(s.seg)}</div>}
+      <button className="btn" disabled={!dec.act || mod.online === false} onClick={go}>{act === 'abrir' ? 'Abrir' : 'Cerrar'} portón</button>
+    </div>
+  );
+}
+
+function DoorbellCard({ ch, mod, frame, onOpen }) {
+  return (
+    <div className={'card' + (mod.online === false ? ' off-line' : '')}>
+      <div className="row">
+        <span className="ico">🔔</span>
+        <div className="grow"><div className="name">{ch.nombre}</div><div className="sub">{ch.habitacion}{mod.online === false ? ' · sin conexión' : ''}</div></div>
+      </div>
+      {frame && <img className="cam" style={{ maxHeight: 120, objectFit: 'cover', marginTop: 0 }} src={frame} alt="Última imagen del portero" />}
+      <button className="btn" disabled={mod.online === false} onClick={onOpen}>Abrir portero</button>
+    </div>
+  );
+}
+
+function PorteroSheet({ ch, mod, frame, send, ask, hear, setHear, talkStart, talkStop, onClose }) {
+  const s = (mod && mod.st[ch.id]) || {};
+  const [talking, setTalking] = useState(false);
+  const cmd = data => send({ mod: ch.mod, ch: ch.id, kind: 'send', data });
+  const down = e => { e.preventDefault(); setTalking(true); talkStart(); };
+  const up = () => { if (talking) { setTalking(false); talkStop(); } };
+  return (
+    <div className="sheet" onClick={onClose}><div onClick={e => e.stopPropagation()}>
+      <div className="row"><h2 style={{ margin: 0 }} className="grow">🔔 {ch.nombre}</h2><button className="iconbtn" onClick={onClose} aria-label="cerrar">✕</button></div>
+      {frame ? <img className="cam" src={frame} alt="Imagen del portero" /> : <div className="cam empty">Sin imagen todavía</div>}
+      <div className="btns" style={{ marginTop: 10 }}>
+        <button className="btn" onClick={() => cmd({ foto: true })}>📷 Foto</button>
+        <button className="btn" onClick={() => cmd({ ver: s.viendo ? 0 : 30 })}>{s.viendo ? '⏹ Parar' : '🎥 Ver 30 s'}</button>
+        <button className="btn" onClick={() => setHear(!hear)}>{hear ? '🔇 Silenciar' : '👂 Escuchar'}</button>
+      </div>
+      <button className="btn hold" style={{ width: '100%', marginTop: 8, padding: 16, background: talking ? 'var(--bad)' : undefined }}
+        onPointerDown={down} onPointerUp={up} onPointerLeave={up} onPointerCancel={up} onContextMenu={e => e.preventDefault()}>
+        {talking ? '🎤 Hablando… soltá para escuchar' : '🎤 Mantené apretado para hablar'}</button>
+      <button className="btn pw" style={{ width: '100%', marginTop: 8, padding: 14 }}
+        onClick={() => ask({ text: '¿Abrir la puerta?', label: 'Abrir', yes: () => cmd({ abrir: true }) })}>🔓 Abrir puerta</button>
+    </div></div>
+  );
+}
+
+function PinSheet({ onOk, onCancel }) {
+  const [v, setV] = useState('');
+  return (
+    <div className="sheet top" onClick={onCancel}><div onClick={e => e.stopPropagation()}>
+      <h2 style={{ marginTop: 0 }}>Estás afuera de casa</h2>
+      <div className="sub">Ingresá tu PIN para hacer este cambio.</div>
+      <form onSubmit={e => { e.preventDefault(); onOk(v); }}>
+        <input type="password" inputMode="numeric" autoFocus value={v} onChange={e => setV(e.target.value)} autoComplete="off" aria-label="PIN" />
+        <div className="row" style={{ marginTop: 12 }}>
+          <button type="button" className="iconbtn grow" onClick={onCancel}>Cancelar</button>
+          <button type="submit" className="iconbtn grow" style={{ background: 'var(--ac)', color: '#04121f', fontWeight: 600 }}>Confirmar</button>
+        </div>
+      </form>
+    </div></div>
+  );
+}
+
+function Settings({ cfg, setCfg, limit, setLimit, geo, setGeo, onClose, notify, hasPin, setPin }) {
+  const [c, setC] = useState(cfg), [lim, setLim] = useState(limit), [g, setG] = useState(geo), [pin, setPinV] = useState('');
+  const save = () => { setCfg(c); setLimit(+lim || 0); setGeo(g); if (pin.trim()) setPin(pin.trim()); onClose(); };
+  const here = () => {
+    if (!navigator.geolocation) return alert('Este navegador no tiene ubicación');
+    navigator.geolocation.getCurrentPosition(p => setG(x => ({ ...x, lat: p.coords.latitude, lon: p.coords.longitude })), () => alert('No pude obtener la ubicación'), { enableHighAccuracy: true, timeout: 20000 });
+  };
+  return (
+    <div className="sheet" onClick={onClose}><div onClick={e => e.stopPropagation()}>
+      <h2 style={{ marginTop: 0 }}>Ajustes</h2>
+      <label>Modo</label>
+      <select value={c.mode} onChange={e => setC({ ...c, mode: e.target.value })}>
+        <option value="demo">Demo (simulado, sin hardware)</option>
+        <option value="mqtt">Casa real (servidor propio)</option>
+      </select>
+      {c.mode === 'mqtt' && <>
+        <label>Servidor de la casa (por la VPN, siempre wss://)</label>
+        <input type="text" value={c.url} placeholder={location.protocol === 'https:' ? 'wss://' + location.host + '/mqtt' : 'wss://casa.tu-red.ts.net/mqtt'} onChange={e => setC({ ...c, url: e.target.value.trim() })} />
+        <label>Tu usuario (p-nombre)</label>
+        <input type="text" value={c.user} autoCapitalize="off" onChange={e => setC({ ...c, user: e.target.value })} />
+        <label>Tu clave</label>
+        <input type="password" value={c.pass} onChange={e => setC({ ...c, pass: e.target.value })} />
+      </>}
+      <label>Avisar si el consumo supera (W)</label>
+      <input type="number" value={lim} min="0" step="100" onChange={e => setLim(e.target.value)} />
+      <label>Aviso al llegar a casa (solo con la app abierta)</label>
+      <select value={g.on ? '1' : '0'} onChange={e => setG({ ...g, on: e.target.value === '1' })}>
+        <option value="0">Desactivado</option><option value="1">Activado</option>
+      </select>
+      {g.on && <>
+        <div className="row" style={{ marginTop: 8 }}>
+          <div className="grow sub">{g.lat != null ? 'Casa: ' + g.lat.toFixed(5) + ', ' + g.lon.toFixed(5) : 'Casa sin definir'}</div>
+          <button className="iconbtn" onClick={here}>📍 Usar mi ubicación</button>
+        </div>
+        <label>Radio (metros)</label>
+        <input type="number" value={g.radio} min="50" step="50" onChange={e => setG({ ...g, radio: +e.target.value || 150 })} />
+        <div className="sub" style={{ marginTop: 8 }}>Al llegar te aparece «¿Abro el portón?» con un botón. Nunca se abre solo ni por voz.</div>
+      </>}
+      <label>Rol de esta persona</label>
+      <select value={c.rol || 'completo'} onChange={e => setC({ ...c, rol: e.target.value })}>
+        <option value="completo">Completo</option><option value="basico">Básico (solo algunos módulos)</option>
+      </select>
+      {c.rol === 'basico' && <>
+        <label>Módulos que puede manejar (separados por coma)</label>
+        <input type="text" value={c.modulos || ''} autoCapitalize="off" onChange={e => setC({ ...c, modulos: e.target.value })} />
+      </>}
+      <label>PIN para cambios por voz o texto desde afuera de casa {hasPin ? '(ya hay uno: escribí otro para cambiarlo)' : '(sin PIN, afuera solo desde las tarjetas)'}</label>
+      <input type="password" inputMode="numeric" value={pin} onChange={e => setPinV(e.target.value)} autoComplete="off" />
+      <label>Respuestas habladas de Jarvis</label>
+      <select value={c.tts ? '1' : '0'} onChange={e => setC({ ...c, tts: e.target.value === '1' })}>
+        <option value="0">Solo en pantalla</option><option value="1">Leerlas en voz alta (voz del teléfono)</option>
+      </select>
+      <label>Micrófono del navegador</label>
+      <select value={c.nubeVoz ? '1' : '0'} onChange={e => setC({ ...c, nubeVoz: e.target.value === '1' })}>
+        <option value="0">Apagado (escribir el comando)</option>
+        <option value="1">Activado: ojo, el navegador envía el audio a su servicio de voz en la nube</option>
+      </select>
+      <div className="row" style={{ marginTop: 14 }}>
+        <button className="iconbtn" onClick={notify}>🔔 Permitir notificaciones</button>
+        <div className="grow" />
+        <button className="iconbtn" style={{ background: 'var(--ac)', color: '#04121f', fontWeight: 600 }} onClick={save}>Guardar</button>
+      </div>
+    </div></div>
+  );
+}
+
+function App() {
+  const [cfg, setCfgS] = useState(() => store.get('casa.cfg', { mode: 'demo', url: '', user: '', pass: '', rol: 'completo', modulos: '', tts: true, nubeVoz: false }));
+  const [limit, setLimitS] = useState(() => store.get('casa.limit', 4000));
+  const [armed, setArmedS] = useState(() => store.get('casa.armed', true));
+  const [mods, dispatch] = useReducer(reducer, {});
+  const [conn, setConn] = useState('wait');
+  const [alerts, setAlerts] = useState([]);
+  const [unread, setUnread] = useState(0);
+  const [tab, setTab] = useState('casa');
+  const [room, setRoom] = useState('Todas');
+  const [now, setNow] = useState(Date.now());
+  const [msg, setMsg] = useState('');
+  const [showSet, setShowSet] = useState(false);
+  const [geo, setGeoS] = useState(() => store.get('casa.geo', { on: false, lat: null, lon: null, radio: 150, auto: false }));
+  const [confirm, setConfirm] = useState(null);
+  const [portero, setPortero] = useState(null);
+  const [frame, setFrame] = useState('');
+  const [hear, setHearS] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [jlog, setJlog] = useState([]);
+  const [pinAsk, setPinAsk] = useState(null);
+  const [ear, setEar] = useState('apagado');
+  const [pinHash, setPinHashS] = useState(() => store.get('casa.pin', ''));
+  const busRef = useRef(null), modsRef = useRef({}), armedRef = useRef(armed), limitRef = useRef(limit), enRef = useRef({}), tabRef = useRef(tab);
+  const audioRef = useRef(null), talkRef = useRef(null), talkWant = useRef(false), geoRef = useRef(null), arriveRef = useRef(null), jarvisRef = useRef(null), connRef = useRef(conn), oidoRef = useRef(null), micRef = useRef(null), runRef = useRef(null);
+  connRef.current = conn; modsRef.current = mods; armedRef.current = armed; limitRef.current = limit; tabRef.current = tab;
+
+  const userKey = cfg.mode === 'demo' ? 'demo' : (cfg.user || 'anon');
+  const setCfg = v => { setCfgS(v); store.set('casa.cfg', v); };
+  const setLimit = v => { setLimitS(v); store.set('casa.limit', v); };
+  const setGeo = v => { setGeoS(v); store.set('casa.geo', v); };
+  const setArmed = v => { setArmedS(v); store.set('casa.armed', v); };
+  const toast = useCallback(t => { setMsg(t); clearTimeout(toast.t); toast.t = setTimeout(() => setMsg(''), 3500); }, []);
+
+  const notify = () => {
+    if (!('Notification' in window)) return toast('Este navegador no soporta notificaciones');
+    Notification.requestPermission().then(p => toast(p === 'granted' ? 'Notificaciones activadas' : 'Notificaciones bloqueadas'));
+  };
+  const pushAlert = useCallback((text, level) => {
+    setAlerts(a => [{ id: Date.now() + Math.random(), t: Date.now(), text, level }, ...a].slice(0, 60));
+    if (tabRef.current !== 'avisos') setUnread(u => u + 1);
+    toast('⚠ ' + text);
+    try {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r => r.showNotification('Casa', { body: text, tag: 'casa' }));
+        else new Notification('Casa', { body: text });
+      }
+    } catch (e) {}
+  }, [toast]);
+
+  // Imagen del portero (foto o cuadro de video): llega como bytes JPEG (o SVG en demo)
+  const showFrame = useCallback(bytes => {
+    setFrame('data:' + L.imageMime(bytes) + ';base64,' + L.bytesToB64(bytes));
+  }, []);
+  // Audio de la puerta: PCM 16 bit 8 kHz; se agenda con un pequeño colchón para absorber el jitter de la red
+  const playPcm = useCallback(bytes => {
+    const a = audioRef.current; if (!a || !a.on) return;
+    const f = L.floatFromPcm(bytes); if (!f.length) return;
+    const buf = a.ctx.createBuffer(1, f.length, 8000); buf.copyToChannel(f, 0);
+    const src = a.ctx.createBufferSource(); src.buffer = buf; src.connect(a.ctx.destination);
+    const t = Math.max(a.ctx.currentTime + 0.15, a.next); src.start(t); a.next = t + buf.duration;
+  }, []);
+
+  // Conexión: demo (bus simulado) o MQTT real
+  useEffect(() => {
+    dispatch({ t: 'reset' }); enRef.current = {};
+    let bus, timer;
+    const onMsg = (topic, payload) => {
+      const p = topic.split('/'); if (p[0] !== 'casa' || p.length < 3) return;
+      const id = p[1], kind = p[2];
+      if (kind === 'foto' || kind === 'video') { showFrame(payload); return; }
+      if (kind === 'audio') { if (p[3] === 'out') playPcm(payload); return; }
+      const txt = payload.toString();
+      if (kind === 'desc') { try { dispatch({ t: 'desc', id, desc: JSON.parse(txt) }); } catch (e) {} }
+      else if (kind === 'estado') {
+        let st; try { st = JSON.parse(txt); } catch (e) { return; }
+        dispatch({ t: 'estado', id, st });
+        const d = modsRef.current[id] && modsRef.current[id].desc;
+        (d ? d.canales : []).forEach(c => {
+          if (c.tipo === 'energy' && st[c.id]) {
+            const key = id + '/' + c.id, r = L.energyCheck(enRef.current[key], st[c.id].w, limitRef.current);
+            enRef.current[key] = r.state;
+            if (r.alert) pushAlert('Consumo alto: ' + Math.round(st[c.id].w) + ' W (límite ' + limitRef.current + ' W)', 'bad');
+          }
+        });
+      }
+      else if (kind === 'online') {
+        const prev = modsRef.current[id] && modsRef.current[id].online;
+        dispatch({ t: 'online', id, v: txt === '1' });
+        if (prev === true && txt === '0') { const d = modsRef.current[id].desc; pushAlert((d ? d.nombre : id) + ' se desconectó', 'bad'); }
+      }
+      else if (kind === 'evento') {
+        let e; try { e = JSON.parse(txt); } catch (x) { return; }
+        if (e.tipo === 'movimiento' && armedRef.current) pushAlert('Movimiento: ' + (e.nombre || e.c), 'bad');
+        else if (e.tipo === 'auto_apagado') pushAlert((e.nombre || e.c) + ' se apagó por tiempo máximo', 'warn');
+        else if (e.tipo === 'ir_aprendido') toast(e.ok ? '✓ Botón aprendido' : 'No se recibió señal, probá de nuevo');
+        else if (e.tipo === 'timbre') { pushAlert('🔔 Timbre en ' + (e.nombre || 'el portero'), 'bad'); setPortero({ mod: id, ch: e.c }); }
+        else if (e.tipo === 'porton_abierto_mucho') pushAlert('El portón lleva ' + Math.max(1, Math.round((e.seg || 0) / 60)) + ' min abierto', 'warn');
+        else if (e.tipo === 'puerta_abierta') toast('🔓 Puerta abierta');
+        else if (e.tipo === 'cisterna_vacia') pushAlert('La cisterna se quedó sin agua: la bomba se apagó', 'bad');
+        else if (e.tipo === 'tanque_no_llena') pushAlert('El tanque no se llenó en ' + Math.max(1, Math.round((e.seg || 0) / 60)) + ' min: bomba apagada. Revisá si hay una pérdida', 'bad');
+        else if (e.tipo === 'tope_marcha') pushAlert((e.c || 'El riego') + ' se cortó por tiempo máximo', 'warn');
+        else if (e.tipo === 'manguera_larga') pushAlert('La manguera lleva ' + Math.max(1, Math.round((e.seg || 0) / 60)) + ' min abierta', 'warn');
+      }
+    };
+    if (cfg.mode === 'demo') {
+      bus = L.createSimBus();
+      bus.on('message', onMsg); bus.on('connect', () => setConn('ok'));
+      bus.subscribe();
+      timer = setInterval(() => bus.tick(1), 1000);
+    } else {
+      if (!window.mqtt || !cfg.url) { setConn('err'); return; }
+      setConn('wait');
+      bus = window.mqtt.connect(cfg.url, { username: cfg.user || undefined, password: cfg.pass || undefined, clean: true, reconnectPeriod: 3000, connectTimeout: 10000, clientId: 'casa-pwa-' + Math.random().toString(16).slice(2, 10) });
+      bus.on('connect', () => { setConn('ok'); bus.subscribe(['casa/+/desc', 'casa/+/estado', 'casa/+/online', 'casa/+/evento', 'casa/+/foto', 'casa/+/video', 'casa/+/audio/out']); });
+      bus.on('reconnect', () => setConn('wait'));
+      bus.on('close', () => setConn(c => c === 'ok' ? 'wait' : c));
+      bus.on('error', () => setConn('err'));
+      bus.on('message', onMsg);
+    }
+    busRef.current = bus;
+    return () => { clearInterval(timer); bus && bus.end(true); };
+  }, [cfg.mode, cfg.url, cfg.user, cfg.pass]);
+
+  useEffect(() => { const i = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(i); }, []);
+  useEffect(() => { if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {}); }, []);
+
+  const send = useCallback(c => {
+    if (!busRef.current) return;
+    const m = L.buildCmd(c); busRef.current.publish(m.topic, m.payload);
+  }, []);
+
+  // Geovalla: solo mientras la app está abierta (un navegador no sigue la ubicación con el teléfono bloqueado).
+  // Al llegar, Jarvis decide si ofrece abrir el portón; la apertura es solo con el botón.
+  arriveRef.current = () => {
+    pushAlert('Llegando a casa', 'warn');
+    const j = jarvisRef.current; if (!j) return;
+    const o = j.llegada({ usuario: userKey });
+    if (!o.ofrecer) return;
+    setConfirm({ text: o.texto, label: 'Abrir', yes: () => toast(j.abrirPorton({ usuario: userKey, origen: 'boton', bloqueado: false }).texto) });
+  };
+  useEffect(() => {
+    if (!geo.on || geo.lat == null || !navigator.geolocation) return;
+    geoRef.current = null;
+    const id = navigator.geolocation.watchPosition(p => {
+      const r = L.geoStep(geoRef.current, { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy }, { lat: geo.lat, lon: geo.lon }, geo.radio);
+      geoRef.current = r.state;
+      if (r.ev === 'llegando') arriveRef.current();
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 });
+    return () => navigator.geolocation.clearWatch(id);
+  }, [geo.on, geo.lat, geo.lon, geo.radio]);
+
+  // Portero: hablar (mantener apretado) y escuchar
+  const talkStart = async () => {
+    const ch = L.listChannels(modsRef.current).find(c => c.kind === 'doorbell'); if (!ch || talkRef.current) return;
+    talkWant.current = true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      if (!talkWant.current) { stream.getTracks().forEach(t => t.stop()); return; }       // soltó el botón antes de que se abriera el micrófono
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(4096, 1, 1);
+      proc.onaudioprocess = e => {
+        const b64 = L.bytesToB64(L.pcmToBytes(L.pcmFromFloat(e.inputBuffer.getChannelData(0), ctx.sampleRate, 8000)));
+        if (busRef.current) busRef.current.publish('casa/' + ch.mod + '/audio/in', b64);
+      };
+      src.connect(proc); proc.connect(ctx.destination);
+      talkRef.current = { stream, ctx, proc, src };
+    } catch (e) { toast('No pude usar el micrófono (revisá el permiso)'); }
+  };
+  const talkStop = () => {
+    talkWant.current = false;
+    const t = talkRef.current; if (!t) return; talkRef.current = null;
+    try { t.proc.onaudioprocess = null; t.src.disconnect(); t.proc.disconnect(); t.stream.getTracks().forEach(x => x.stop()); t.ctx.close(); } catch (e) {}
+  };
+  const setHear = on => {
+    const ch = L.listChannels(modsRef.current).find(c => c.kind === 'doorbell'); if (!ch) return;
+    if (on) {
+      try {
+        const ctx = (audioRef.current && audioRef.current.ctx) || new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.resume) ctx.resume();
+        audioRef.current = { ctx, next: 0, on: true };
+      } catch (e) { return toast('Este navegador no puede reproducir audio'); }
+    } else if (audioRef.current) audioRef.current.on = false;
+    setHearS(on);
+    send({ mod: ch.mod, ch: ch.id, kind: 'send', data: { escuchar: on } });
+  };
+  const openPortero = (mod, ch) => { setPortero({ mod, ch }); send({ mod, ch, kind: 'send', data: { foto: true } }); };
+  const closePortero = () => {
+    const p = portero; talkStop();
+    if (p) { send({ mod: p.mod, ch: p.ch, kind: 'send', data: { ver: 0 } }); if (hear) setHear(false); }
+    setPortero(null);
+  };
+
+  const channels = useMemo(() => L.listChannels(mods), [mods]);
+  const rooms = useMemo(() => ['Todas'].concat(Array.from(new Set(channels.map(c => c.habitacion)))), [channels]);
+  const shown = channels.filter(c => room === 'Todas' || c.habitacion === room);
+
+  // ---------- Jarvis ----------
+  // Un navegador no puede saber si el teléfono está bloqueado: con la app en pantalla se asume desbloqueado.
+  // "Dentro de casa" = conectado al servidor por la red de casa (IP privada o .lan/.local), no por el nombre del wifi.
+  const dentro = () => {
+    if (cfg.mode === 'demo') return true;
+    try { const h = new URL(cfg.url).hostname; return connRef.current === 'ok' && (/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h) || /\.(lan|local)$/.test(h)); } catch (e) { return false; }
+  };
+  const hashPin = async v => {
+    if (!(window.crypto && crypto.subtle)) return '';
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('casa-pin:' + v));
+    return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
+  };
+  const setPin = async v => { const h = await hashPin(v); if (!h) return toast('Este navegador no permite guardar el PIN (hace falta https)'); setPinHashS(h); store.set('casa.pin', h); toast('PIN guardado'); };
+  useEffect(() => {
+    const ms = String(cfg.modulos || '').split(',').map(x => x.trim()).filter(Boolean);
+    jarvisRef.current = Jarvis.crear({
+      L, canales: () => L.listChannels(modsRef.current),
+      estado: (m, c) => (modsRef.current[m] && modsRef.current[m].st || {})[c],
+      online: m => modsRef.current[m] ? modsRef.current[m].online : undefined,
+      conectado: () => connRef.current === 'ok',
+      enviar: m => { if (busRef.current) busRef.current.publish(m.topic, m.payload); },
+      politica: { usuarios: { [userKey]: cfg.rol === 'basico' ? { rol: 'basico', modulos: ms } : { rol: 'completo' } } }
+    });
+  }, [userKey, cfg.rol, cfg.modulos]);
+
+  const run = useCallback(async (text, extra) => {
+    const j = jarvisRef.current; if (!j) return;
+    const ctx = Object.assign({ usuario: userKey, dispositivo: 'pwa', bloqueado: false, ubicacion: dentro() ? 'dentro' : 'fuera' }, extra);
+    const r = await j.oir(text, ctx);
+    if (text !== 'sí' && text !== 'no') setJlog(l => l.concat({ who: 'you', text }).slice(-12));
+    setJlog(l => l.concat({ who: 'bot', text: r.texto, bad: r.tipo === 'rechazo' || r.tipo === 'error' }).slice(-12));
+    if (cfg.tts && window.speechSynthesis) {
+      try {
+        const u = new SpeechSynthesisUtterance(r.texto); u.lang = 'es-AR';
+        const mute = v => { if (oidoRef.current) oidoRef.current.silenciar(v); };
+        let libre = false; const soltar = () => { if (!libre) { libre = true; setTimeout(() => mute(false), 400); } };
+        mute(true); u.onend = u.onerror = soltar;                       // que no se oiga a sí mismo
+        setTimeout(soltar, Math.min(15000, 1500 + r.texto.length * 80));  // por si el navegador nunca avisa que terminó
+        speechSynthesis.cancel(); speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+    if (r.tipo !== 'confirmar') setConfirm(c => c && c.jv ? null : c);              // si confirmaste por voz, se cierra el cuadro
+    if (r.tipo === 'confirmar') setConfirm({ jv: true, text: r.texto, label: 'Sí', yes: () => run('sí', extra), no: () => run('no', extra) });
+    else if (r.tipo === 'rechazo' && /fuera de casa/.test(r.texto)) {
+      if (!pinHash) toast('Para cambios desde afuera configurá un PIN en Ajustes, o usá la tarjeta');
+      else setPinAsk({ text, extra });
+    } else toast((r.tipo === 'orden' ? '✓ ' : '') + r.texto);
+  }, [userKey, cfg.mode, cfg.url, cfg.tts, pinHash]);
+
+  runRef.current = run;
+  const cargarScript = src => new Promise((ok, mal) => {
+    if (document.querySelector('script[data-lazy="' + src + '"]')) return ok();
+    const e = document.createElement('script'); e.src = src; e.dataset.lazy = src; e.onload = ok; e.onerror = () => mal(new Error(src)); document.head.appendChild(e);
+  });
+  const pararOido = () => {
+    const m = micRef.current; micRef.current = null;
+    if (m) { try { m.proc.onaudioprocess = null; m.src.disconnect(); m.proc.disconnect(); m.stream.getTracks().forEach(x => x.stop()); m.ctx.close(); } catch (e) {} }
+    if (oidoRef.current) { oidoRef.current.detener(); oidoRef.current = null; }
+    setEar('apagado');
+  };
+  // Voz local: Vosk en el propio dispositivo. El audio no sale. Necesita https o localhost (para el micrófono) y el modelo en modelo/.
+  const iniciarOido = async () => {
+    setEar('cargando');
+    let model;
+    try {
+      await cargarScript('vendor/vosk.js');
+      model = await window.Vosk.createModel('modelo/vosk-es.tar.gz');
+    } catch (e) { setEar('apagado'); return toast('Falta el modelo de voz (modelo/vosk-es.tar.gz). Mirá el README'); }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } });
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(4096, 1, 1);
+      const jv = { modoReconocimiento: u => jarvisRef.current.modoReconocimiento(u), generarFrases: (c, o) => jarvisRef.current.generarFrases(c, o) };
+      const oido = Oido.crear({ model, jarvis: jv, canales: () => L.listChannels(modsRef.current), usuario: userKey,
+        onFrase: t => runRef.current(t), onEstado: e => setEar(e) });
+      proc.onaudioprocess = e => oido.alimentar(new Float32Array(e.inputBuffer.getChannelData(0)), ctx.sampleRate);
+      src.connect(proc); proc.connect(ctx.destination);
+      micRef.current = { stream, ctx, src, proc }; oidoRef.current = oido;
+      oido.iniciar();
+    } catch (e) { setEar('apagado'); toast('No pude usar el micrófono (permiso, o hace falta https/localhost)'); }
+  };
+  useEffect(() => () => pararOido(), []);
+
+  const startVoice = () => {
+    if (cfg.nubeVoz) {                                         // opcional: voz del navegador (el audio va a la nube)
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return toast('Este navegador no tiene voz: escribí el comando arriba');
+      try {
+        const r = new SR(); r.lang = 'es-AR'; r.interimResults = false; r.maxAlternatives = 1;
+        r.onresult = e => run(e.results[0][0].transcript);
+        r.onerror = e => toast(e.error === 'not-allowed' ? 'Falta permiso de micrófono' : 'No te entendí, probá de nuevo');
+        r.onend = () => setListening(false);
+        r.start(); setListening(true);
+      } catch (e) { setListening(false); }
+      return;
+    }
+    if (ear === 'apagado') return iniciarOido();
+    if (ear === 'esperando' && oidoRef.current) return oidoRef.current.activar();       // hablar sin decir la palabra
+    if (ear === 'escuchando') return pararOido();
+  };
+
+  const card = c => {
+    const mod = mods[c.mod]; if (!mod) return null;
+    if (c.kind === 'switch' || c.kind === 'valve' || c.kind === 'heater') return <SwitchCard key={c.key} ch={c} mod={mod} now={now} send={send} />;
+    if (c.kind === 'pump') return <PumpCard key={c.key} ch={c} mod={mod} />;
+    if (c.kind === 'ir') return <IrCard key={c.key} ch={c} mod={mod} send={send} toast={toast} />;
+    if (c.kind === 'gate') return <GateCard key={c.key} ch={c} mod={mod} ask={setConfirm} send={send} />;
+    if (c.kind === 'doorbell') return <DoorbellCard key={c.key} ch={c} mod={mod} frame={frame} onOpen={() => openPortero(c.mod, c.id)} />;
+    if (c.kind === 'motion') return <MotionCard key={c.key} ch={c} mod={mod} />;
+    if (c.kind === 'energy') return <EnergyCard key={c.key} ch={c} mod={mod} limit={limit} />;
+    return null;
+  };
+
+  return (
+    <>
+      <div className="wrap">
+        <header>
+          <h1>🏠 Casa</h1>
+          <span className={'dot ' + conn} title={conn} />
+          {cfg.mode === 'demo' && <span className="pill w">demo</span>}
+          {ear !== 'apagado' && <button className={'pill ' + (ear === 'escuchando' ? 'w' : 'g')} onClick={pararOido} title="Tocá para apagar la escucha" style={{ border: 0 }}>
+            {ear === 'cargando' ? '⏳ cargando la voz…' : ear === 'escuchando' ? '🎙 te escucho' : '👂 decí «Ey Jarvis»'}</button>}
+          {(() => { const cv = jarvisRef.current && jarvisRef.current.conversacion(userKey); return cv && cv.activa ? <span className="pill g" title="Conversación libre activa">💬 conversando{cv.nube ? ' (nube)' : ''}</span> : null; })()}
+          <button className="iconbtn" onClick={() => setShowSet(true)} aria-label="ajustes">⚙️</button>
+        </header>
+
+        {tab === 'casa' && <>
+          <form className="cmdbox" onSubmit={e => { e.preventDefault(); if (typed.trim()) { run(typed); setTyped(''); } }}>
+            <input type="text" value={typed} onChange={e => setTyped(e.target.value)} placeholder="Ej: Ey Jarvis, prendé la luz del living · qué está prendido · apagá todo" />
+            <button className="iconbtn" type="submit">Ir</button>
+          </form>
+          {jlog.length > 0 && <div className="card jv" aria-live="polite">{jlog.slice(-4).map((l, i) => <div key={i} className={l.who + (l.bad ? ' bad' : '')}>{l.who === 'you' ? '🗣 ' : '🤖 '}{l.text}</div>)}</div>}
+          <div className="chips">{rooms.map(r => <button key={r} className={'chip' + (room === r ? ' sel' : '')} onClick={() => setRoom(r)}>{r}</button>)}</div>
+          {shown.length ? <div className="grid">{shown.map(card)}</div>
+            : <div className="empty">{conn === 'ok' ? 'Esperando módulos…' : conn === 'err' ? 'Sin conexión. Revisá los ajustes.' : 'Conectando…'}</div>}
+        </>}
+
+        {tab === 'avisos' && <>
+          <div className="card" style={{ marginBottom: 12 }}>
+            <div className="row"><span className="ico">🛡️</span>
+              <div className="grow"><div className="name">Alarma de movimiento</div><div className="sub">{armed ? 'Avisa cuando algún sensor detecta movimiento' : 'Desarmada: no avisa'}</div></div>
+              <Toggle on={armed} onClick={() => setArmed(!armed)} /></div>
+          </div>
+          {alerts.length ? alerts.map(a => <div key={a.id} className={'alert ' + (a.level === 'bad' ? 'bad' : '')}>
+            <div>{a.text}</div><div className="sub">{new Date(a.t).toLocaleTimeString('es-AR')}</div></div>)
+            : <div className="empty">Sin avisos</div>}
+        </>}
+      </div>
+
+      {msg && <div className="toast" role="status">{msg}</div>}
+
+      <nav><div className="wrap">
+        <button className={'tab' + (tab === 'casa' ? ' sel' : '')} onClick={() => setTab('casa')}>🏠 Casa</button>
+        <button className={'mic' + (listening || ear === 'escuchando' ? ' live' : '')} onClick={startVoice} aria-label="hablar">🎤</button>
+        <button className={'tab' + (tab === 'avisos' ? ' sel' : '')} onClick={() => { setTab('avisos'); setUnread(0); }}>🔔 Avisos{unread ? ' (' + unread + ')' : ''}</button>
+      </div></nav>
+
+      {showSet && <Settings cfg={cfg} setCfg={setCfg} limit={limit} setLimit={setLimit} geo={geo} setGeo={setGeo} onClose={() => setShowSet(false)} notify={notify} hasPin={!!pinHash} setPin={setPin} />}
+      {pinAsk && <PinSheet onCancel={() => setPinAsk(null)} onOk={async v => { if ((await hashPin(v)) === pinHash) { const q = pinAsk; setPinAsk(null); run(q.text, Object.assign({}, q.extra, { claveOk: true })); } else toast('PIN incorrecto'); }} />}
+      {portero && (() => {
+        const pc = channels.find(c => c.mod === portero.mod && c.id === portero.ch);
+        return pc ? <PorteroSheet ch={pc} mod={mods[pc.mod]} frame={frame} send={send} ask={setConfirm} hear={hear} setHear={setHear} talkStart={talkStart} talkStop={talkStop} onClose={closePortero} /> : null;
+      })()}
+      {confirm && <div className="sheet top" onClick={() => { const n = confirm.no; setConfirm(null); if (n) n(); }}><div onClick={e => e.stopPropagation()}>
+        <h2 style={{ marginTop: 0 }}>{confirm.text}</h2>
+        <div className="row">
+          <button className="iconbtn grow" onClick={() => { const n = confirm.no; setConfirm(null); if (n) n(); }}>Cancelar</button>
+          <button className="iconbtn grow" style={{ background: 'var(--ac)', color: '#04121f', fontWeight: 600 }} onClick={() => { const y = confirm.yes; setConfirm(null); y(); }}>{confirm.label}</button>
+        </div>
+      </div></div>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

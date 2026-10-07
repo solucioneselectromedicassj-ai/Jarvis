@@ -1,0 +1,7 @@
+Acá va el modelo de voz en español, que NO viene en el zip (pesa unos 40 MB):
+
+1. Bajá "vosk-model-small-es-0.42" de https://alphacephei.com/vosk/models (es gratis, licencia Apache 2.0).
+2. Descomprimilo. Adentro hay una carpeta con am, conf, graph, ivector. Renombrá esa carpeta a:  model
+3. Abrí una consola (cmd) en esta carpeta "modelo" y ejecutá (Windows 11 ya trae tar):
+       tar -czf vosk-es.tar.gz model
+4. Tiene que quedar el archivo  modelo/vosk-es.tar.gz  (podés borrar la carpeta model y el zip).
