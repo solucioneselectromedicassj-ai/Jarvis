@@ -1,0 +1,10 @@
+{
+  "modulos": {
+    "porton":    {"prohibido_en": ["voz", "agente"]},
+    "portero":   {"prohibido_en": ["voz", "agente"]},
+    "cerradura": {"prohibido_en": ["voz", "agente"]},
+    "calefon":   {"confirmar": ["encender"], "tope_minutos": 60},
+    "estufa":    {"confirmar": ["encender"], "tope_minutos": 120},
+    "riego":     {"tope_minutos": 90}
+  }
+}

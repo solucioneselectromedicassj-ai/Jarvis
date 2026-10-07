@@ -1,0 +1,13 @@
+// Copiá como casa_credenciales.h. NO lo subas a ningún repositorio.
+#define WIFI_SSID     "mi-red"
+#define WIFI_CLAVE    "clave-wifi"
+#define CASA_HOST     "192.168.1.50"       // IP del servidor (la que está en su certificado)
+#define CASA_PUERTO   8884                  // puerto web/WebSocket (ahí está POST /media/audio)
+#define CASA_USUARIO  "m-mic"               // python casa_servidor.py alta-modulo mic --camara
+#define CASA_CLAVE    "clave-del-modulo"
+// Salida de `python casa_servidor.py ca`:
+static const char CASA_CA[] = R"EOF(
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+)EOF";

@@ -1,0 +1,16 @@
+{
+  "servidor-casa": {
+    "tipo": "http",
+    "parametros": {"url": "http://127.0.0.1:8000/health", "expect_status": 200},
+    "descripcion": "Chequea que el servidor de la casa responda",
+    "cada_minutos": 5,
+    "notificar": "on_change"
+  },
+  "backup-base": {
+    "tipo": "script",
+    "parametros": {"script": "backup.bat"},
+    "descripcion": "Copia de seguridad de la base (el script vive en la carpeta scripts)",
+    "cada_minutos": 1440,
+    "notificar": "on_change"
+  }
+}
