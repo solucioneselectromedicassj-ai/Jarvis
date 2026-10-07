@@ -2,6 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<script>
+// Las rutas son relativas: sin la barra final (".../app") se buscarían los archivos un nivel más arriba.
+if (!location.pathname.endsWith("/") && !/\.[a-z0-9]+$/i.test(location.pathname)) location.replace(location.pathname + "/" + location.search + location.hash);
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f766e">
 <meta name="color-scheme" content="light dark">
@@ -70,7 +74,16 @@ label.chk{flex-direction:row;align-items:center;gap:8px}label.chk input{width:au
 </style>
 </head>
 <body>
-<div id="raiz"></div>
+<div id="raiz"><p id="arranque" class="vacio" style="white-space:pre-wrap">Cargando…</p></div>
+<script>
+// Si la app no arranca, que lo diga en pantalla en vez de quedar en blanco.
+var __fallos = [];
+addEventListener("error", function (e) { var t = e.target; __fallos.push(t && t.getAttribute && t.getAttribute("src") ? "No se pudo cargar: " + t.getAttribute("src") : (e.message || "error")); }, true);
+setTimeout(function () {
+  var a = document.getElementById("arranque");
+  if (a) a.textContent = "La app no pudo iniciar.\n" + (__fallos.join("\n") || "Sin más detalle (¿JavaScript bloqueado?).") + "\n\n" + location.href;
+}, 3500);
+</script>
 <script src="vendor/react.production.min.js"></script>
 <script src="vendor/react-dom.production.min.js"></script>
 <script src="vendor/htm.js"></script>
