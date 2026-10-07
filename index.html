@@ -83,6 +83,10 @@ nav .wrap{display:flex;gap:8px;width:100%;align-items:center}
 <script src="jarvis/oido.js"></script>
 
 <!-- ============ LÓGICA PURA (testeable sin navegador) ============ -->
+<script>
+// Si ni React llega a cargar (CDN bloqueado o sin internet), avisar en vez de dejar la pantalla en blanco
+setTimeout(function () { var r = document.getElementById('root'); if (r && !r.children.length) r.innerHTML = '<div style="padding:20px"><h2>Casa no pudo arrancar</h2><p style="color:#8b9aa9">No cargaron las librerías (hace falta internet la primera vez) o falta algún archivo del sitio. Recargá la página.</p></div>'; }, 8000);
+</script>
 <script id="logic">
 window.CasaLogic = (function () {
   const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -934,6 +938,7 @@ function App() {
   const setPin = async v => { const h = await hashPin(v); if (!h) return toast('Este navegador no permite guardar el PIN (hace falta https)'); setPinHashS(h); store.set('casa.pin', h); toast('PIN guardado'); };
   useEffect(() => {
     const ms = String(cfg.modulos || '').split(',').map(x => x.trim()).filter(Boolean);
+    if (typeof Jarvis === 'undefined') { jarvisRef.current = null; return; }   // falta jarvis/jarvis.js: la app sigue andando con las tarjetas
     jarvisRef.current = Jarvis.crear({
       L, canales: () => L.listChannels(modsRef.current),
       estado: (m, c) => (modsRef.current[m] && modsRef.current[m].st || {})[c],
@@ -945,7 +950,7 @@ function App() {
   }, [userKey, cfg.rol, cfg.modulos]);
 
   const run = useCallback(async (text, extra) => {
-    const j = jarvisRef.current; if (!j) return;
+    const j = jarvisRef.current; if (!j) return toast('Jarvis no cargó: falta la carpeta jarvis/ en el sitio. Usá las tarjetas');
     const ctx = Object.assign({ usuario: userKey, dispositivo: 'pwa', bloqueado: false, ubicacion: dentro() ? 'dentro' : 'fuera' }, extra);
     const r = await j.oir(text, ctx);
     if (text !== 'sí' && text !== 'no') setJlog(l => l.concat({ who: 'you', text }).slice(-12));
@@ -1093,7 +1098,19 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+// Si algo falla al arrancar, que se vea el motivo en vez de una pantalla en blanco
+class Guard extends React.Component {
+  constructor(p) { super(p); this.state = { err: null }; }
+  static getDerivedStateFromError(err) { return { err }; }
+  render() {
+    if (!this.state.err) return this.props.children;
+    return <div style={{ padding: 20 }}><h2>No pude arrancar la app</h2>
+      <pre style={{ whiteSpace: 'pre-wrap', color: 'var(--warn)' }}>{String(this.state.err && this.state.err.message || this.state.err)}</pre>
+      <div className="sub">Revisá que estén subidos todos los archivos (index.html, sw.js, manifest.json, jarvis/, vendor/, íconos).</div>
+      <button className="iconbtn" style={{ marginTop: 12 }} onClick={() => { try { localStorage.removeItem('casa.cfg'); } catch (e) {} location.reload(); }}>Restablecer ajustes y recargar</button></div>;
+  }
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Guard><App /></Guard>);
 </script>
 </body>
 </html>
