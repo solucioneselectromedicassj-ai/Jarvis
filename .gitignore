@@ -1,1 +1,9 @@
+# Secretos: nunca a un repositorio
+.env
+datos/
+*.key
+casa_credenciales.h
+*.db
+tareas.json
+__pycache__/
 public/

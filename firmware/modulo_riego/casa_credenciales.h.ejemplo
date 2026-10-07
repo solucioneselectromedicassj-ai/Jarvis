@@ -1,0 +1,13 @@
+// Copiá este archivo como casa_credenciales.h y completalo. NO lo subas a ningún repositorio.
+#define WIFI_SSID     "mi-red"
+#define WIFI_CLAVE    "clave-wifi"
+#define CASA_HOST     "192.168.1.50"      // IP del servidor (la misma que se puso en el certificado)
+#define CASA_PUERTO   8883
+#define CASA_USUARIO  "m-riego"           // lo imprime `alta-modulo`
+#define CASA_CLAVE    "clave-del-modulo"  // se muestra una sola vez
+// Contenido de datos/ca.crt (salida de `casa_servidor.py ca`):
+static const char CASA_CA[] = R"EOF(
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+)EOF";

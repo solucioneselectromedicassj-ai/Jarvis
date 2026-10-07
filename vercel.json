@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "mkdir -p public && cp -r index.html sw.js manifest.webmanifest icono-192.png icono-512.png vendor public/",
+  "buildCommand": "mkdir -p public && cp -r casa-servidor/app/. public/ && rm -f public/vercel.json",
   "outputDirectory": "public",
   "headers": [
     {
